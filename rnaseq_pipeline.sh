@@ -150,7 +150,7 @@ ALN_DIR_NAME=
 
 # the desired output extension for the sorted bam files
 SORTED_TAG=".sorted"
-OUTPUT_BAM_EXTENSION=".bam"
+BAM_EXTENSION=".bam"
 
 #DESeq output directory- to be placed in PROJECT_DIR
 DESEQ_RESULT_DIR="deseq_results"
@@ -444,7 +444,7 @@ if [ $ALN -eq $NUM1 ]; then
             $GTF \
             $GENOME_INDEX \
             $ALIGNER \
-            $SORTED_TAG$OUTPUT_BAM_EXTENSION \
+            $SORTED_TAG$BAM_EXTENSION \
             $TRANSCRIPTOME_INDEX || { echo "Something went wrong in preparing the alignment scripts.  Exiting."; exit 1; }
 
     echo "After examining project structure, will attempt to align on the following samples:"
@@ -470,7 +470,7 @@ if [ $ALN -eq $NUM1 ]; then
 				else
 					echo "...[Mock alignment]..."
 					mkdir $PROJECT_DIR'/'$SAMPLE_DIR_PREFIX$sample'/'$ALN_DIR_NAME
-					touch $PROJECT_DIR'/'$SAMPLE_DIR_PREFIX$sample'/'$ALN_DIR_NAME'/'$sample$SORTED_TAG$OUTPUT_BAM_EXTENSION
+					touch $PROJECT_DIR'/'$SAMPLE_DIR_PREFIX$sample'/'$ALN_DIR_NAME'/'$sample$SORTED_TAG$BAM_EXTENSION
 				fi
 				echo "Alignment on sample $sample completed at: "
 				date
@@ -502,8 +502,9 @@ else
     while read line; do
     	SAMPLE=$(echo $line | awk '{print $1}')
 
-	BASE_BAM_FILE=$SAMPLE$SORTED_TAG$OUTPUT_BAM_EXTENSION
-	BAM_FILE=$(find -L $PROJECT_DIR -type f -name $BASE_BAM_FILE)
+	#the name of the link (in our convention) which will link to the original bam file
+	BASE_BAM_FILE=$SAMPLE$SORTED_TAG$BAM_EXTENSION
+	BAM_FILE=$(find -L $PROJECT_DIR -type f -name $SAMPLE*$BAM_EXTENSION)
 	if [ "$BAM_FILE" != "" ]; then
 		SAMPLE_ALN_DIR=$PROJECT_DIR'/'$SAMPLE_DIR_PREFIX$SAMPLE'/'$ALN_DIR_NAME
 		mkdir -p $SAMPLE_ALN_DIR
@@ -524,7 +525,7 @@ fi
 ############################################################
 
 # check for the appropriate bam files and update the valid sample file accordingly:
-$PYTHON $CHECK_BAM_SCRIPT $VALID_SAMPLE_FILE $PROJECT_DIR $SAMPLE_DIR_PREFIX $ALN_DIR_NAME $SORTED_TAG$OUTPUT_BAM_EXTENSION
+$PYTHON $CHECK_BAM_SCRIPT $VALID_SAMPLE_FILE $PROJECT_DIR $SAMPLE_DIR_PREFIX $ALN_DIR_NAME $SORTED_TAG$BAM_EXTENSION
 
 ############################################################
 
@@ -548,7 +549,7 @@ if [ $TEST -eq $NUM0 ]; then
     		    featureCounts -a $GTF \
 				  -o $COUNTS_DIR'/'$sample$COUNTFILE_SUFFIX \
 				  -t exon \
-				  -g gene_name $PROJECT_DIR"/"$SAMPLE_DIR_PREFIX$sample"/"$ALN_DIR_NAME"/"$sample$SORTED_TAG$OUTPUT_BAM_EXTENSION
+				  -g gene_name $PROJECT_DIR"/"$SAMPLE_DIR_PREFIX$sample"/"$ALN_DIR_NAME"/"$sample$SORTED_TAG$BAM_EXTENSION
     		done
 	elif [[ $ALIGNER == $SNAPR ]]; then
 	    #move the count files
@@ -617,7 +618,7 @@ fi
 #create the reports with RNA-seQC:
 while read line; do
  	SAMPLE=$(echo $line | awk '{print $1}')
-	SAMPLE_BAM=$PROJECT_DIR'/'$SAMPLE_DIR_PREFIX$SAMPLE'/'$ALN_DIR_NAME'/'$SAMPLE$SORTED_TAG$OUTPUT_BAM_EXTENSION
+	SAMPLE_BAM=$PROJECT_DIR'/'$SAMPLE_DIR_PREFIX$SAMPLE'/'$ALN_DIR_NAME'/'$SAMPLE$SORTED_TAG$BAM_EXTENSION
 
         #create output directory
         SAMPLE_QC_DIR=$REPORT_DIR'/'$RNA_SEQC_DIR'/'$SAMPLE
