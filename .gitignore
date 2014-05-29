@@ -1,0 +1,5 @@
+#ignore files ending with .old:
+*.old
+
+#ignore the testing files:
+*.test.sh

@@ -4,31 +4,6 @@ Notes/comments about the RNA-Seq pipeline
 This pipeline has the option of taking either FASTQ or BAM files as input 
 and running a differential expression analysis.
 
-
-Usage: -c contrast_file -d project_directory -s samples_file [-align] [-paired] [-g GENOME] [-test]
-
-Inputs to the script are:
-
- -d: the location of the project directory, which contains subdirectories for the individual samples.  ABSOLUTE PATH- e.g. not '.'
- 
- -s: sample file.  Two tab-separated columns with each line specifying the sample name and condition (e.g. control, case, untreated, etc.)
-     Must match the conditions in the contrast file or no comparison will be performed.
-
- -c (optional): the path to a contrast file (can be located anywhere).  The contrast file has two tab-separated columns
-     specifying the contrasts to make.  !!!COLUMN ORDER IS IMPORTANT!!!  That is, if condition A is control and 
-     condition B is case, then A should be in the first column.  This is relevant for the DESeq analysis 
-     (see Section 1.2.5 in http://www.bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.pdf).
-     The conditions should match those in the samples file.  Otherwise, DESeq will not perform the comparison.
-
-
- -align (optional): a flag for whether to perform the alignment.  If absent, then alignment will be skipped and it is assumed that count files
-                    exist in the directory PROJECT_DIR/SAMPLE_DIR/ALN_DIR_NAME/ under the count file naming convention (specified by
-                    the COUNTFILE_SUFFIX variable)
-
- -paired (optional): specify paired protocol for sequencing.  DEFAULT is SINGLE-END.
-
- -genome (optional): specify the reference genome (DEFAULT is hg19).  It is assumed that the proper snapr indexes already exist for aligning to this genome/transcriptome.
-
- -test (optional): Used in building the pipeline for creating a dummy project, etc. and running mock scripts.  Not a true unit test-- just used for sanity checking.
+To get the basic input arguments, run ./rnaseq_pipeline.sh without any arguments
 
 More complete documentation is in the Bioinformatics Analysis Google Drive under Workflows.

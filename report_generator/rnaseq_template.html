@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RNA-Seq Analysis Results</title>
+    
+    <!-- jQuery-->
+    <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>-->
+    <script src="lib/jquery.min.js"></script>
+    <!-- Bootstrap -->
+    <link href="lib/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Custom css-->	
+    <link href="lib/rnaseq_report.css" rel="stylesheet">
+
+    <!--custom javascript-->
+    <script src="lib/rnaseq_report_custom.js"></script>
+
+  </head>
+	<body>
+              	<div class="simple_header">
+                        <div>
+                             	<span class="left_header">RNA-Seq Report</span>
+                        </div>
+                        <div>
+                             	<span class="right_header">
+                                        <img id="cccb_logo" src="lib/CCCB_Logo.png"></img>
+                                </span>
+                        </div>
+                </div>
+		
+		<div class="spacer-div"></div>
+
+		<div class="container-fluid">
+			<div class="row">
+				<ul id="tabPanel" class="nav nav-tabs">
+					<li>
+						<a data-toggle="tab" href="#quality_report">Quality Report</a>
+					</li>
+					<li>
+						<a data-toggle="tab" href="#differential_analysis">Differential Analysis</a>
+					</li>
+					<li>
+						<a data-toggle="tab" href="#norm_counts">Normalized Counts</a>
+					</li>
+					<li>
+						<a data-toggle="tab" href="#heatmap">Heatmap</a>
+					</li>
+					<li>
+						<a data-toggle="tab" href="#gsea">GSEA</a>
+					</li>
+				</ul>
+
+				<div class="tab-content">
+					<div class="tab-pane fade" id="quality_report">
+
+					<div class="container">
+						<h2>Click on a sample to view the quality report</h2>
+					</div>
+					<div id="quality_report_section" class="container">
+						<div class="row">
+							<!-- #QC_REPORT#
+							<div class="panel panel-primary">
+		  						<div id="#SAMPLE_ID#_panel" class="panel-heading keep-pointer">
+		    						<h3 class="panel-title">#SAMPLE_ID#</h3>
+		  						</div>
+		 			 			<div id="#SAMPLE_ID#_view" class="panel-body content-panel">
+									<iframe src="#REPORT_LINK#" class="qc_report_iframe" marginwidth="0" marginheight="0" frameborder="0" vspace="0" hspace="0">
+									</iframe>
+		  						</div>
+							</div>
+								#QC_REPORT#
+							-->
+						</div>
+					</div>
+				</div>
+		  		<div class="tab-pane fade" id="differential_analysis">
+					<div class="simple_div">
+						<h2>Differential expression analysis performed by DESeq:</h2>
+						<!--
+						#DIFFERENTIAL_EXP_RESULTS#
+						<div id="#CONTRAST_ID#_div">
+							<h3>
+								<a href="#DESEQ_FILE_LINK#">#TRUNCATED_DESEQ_FILENAME#</a>
+							</h3>
+						</div>
+						#DIFFERENTIAL_EXP_RESULTS#
+						-->
+					</div>
+				</div>
+		  		<div class="tab-pane fade" id="norm_counts">
+					<div class="simple_div">
+						<h2>Normalized count file created by DESeq:</h2>
+						<!--
+						#NORM_COUNT_FILE#
+						<div id="norm_count_div">
+							<h3>
+								<a href="#NORM_COUNT_FILE_LINK#">#TRUNCATED_NORM_COUNT_FILENAME#</a>
+							</h3>
+						</div>
+						#NORM_COUNT_FILE#
+						-->
+					</div>
+				</div>
+		  		<div class="tab-pane fade" id="heatmap">
+					<div class="simple_div">
+						<h2>Heatmap</h2>
+						<!--
+						#HEATMAP#
+						<div id="heatmap_div">
+							<img src="#HEATMAP_LOCATION#" alt="Heatmap file not processed/found"></img>
+						</div>
+						#HEATMAP#
+						-->
+					</div>
+				</div>
+		  		<div class="tab-pane fade" id="gsea">
+					<div class="simple_div">
+						<h2>GSEA has not been performed</h2></div>
+					</div>
+				</div>
+	</div>
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="lib/bootstrap.min.js"></script>
+  </body>
+</html>
+
+
