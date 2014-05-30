@@ -5,6 +5,11 @@ if ! which STAR ; then
 	exit 1
 fi
 
+if ! which samtools ; then
+	echo "Could not find samtools in your PATH"
+	exit 1
+fi
+
 GTF=%GTF%
 GENOME_INDEX=%GENOME_INDEX% 
 BAM_FILE_SUFFIX=%BAM_FILE_SUFFIX%
@@ -104,19 +109,26 @@ java -Xmx4g -jar /cccbstore-rc/projects/cccb/apps/picard-tools-1.42/AddOrReplace
 	  RGCN='CCCB'
 
 #convert to BAM
-samtools view -bS -o $UNSORTED_BAM $DEFAULT_SAM
+samtools view -bS -o $UNSORTED_BAM $SORTED_SAM
 
 #sort
 samtools sort -m 1000000000 $UNSORTED_BAM $SORTED_BAM
-
-#remove the unsorted bam
-rm $UNSORTED_BAM &
 
 #rename, so that it will be properly referenced by other scripts:
 mv $SORTED_BAM'.bam' $BASE$BAM_FILE_SUFFIX
 
 #create BAM index
 samtools index $BASE$BAM_FILE_SUFFIX
+
+#cleanup
+#remove the sorted SAM (w/ read groups added), the original SAM produced by STAR, and the unsorted bam
+rm $UNSORTED_BAM &
+rm $DEFAULT_SAM &
+rm $SORTED_SAM &
+
+#remove the empty tmp directories that STAR did not cleanup
+rmdir $BASE'_tmp'
+rmdir $OUTDIR'/tmp'
 
 chmod 744 $OUTDIR
 
