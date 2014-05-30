@@ -58,6 +58,7 @@ PREPARE_ALIGN_SCRIPT=$PIPELINE_HOME'/prepare_align_script.py'
 CHECK_BAM_SCRIPT=$PIPELINE_HOME'/check_for_bam.py'
 CREATE_DESIGN_MATRIX_SCRIPT=$PIPELINE_HOME'/create_design_matrix.py'
 CREATE_REPORT_SCRIPT=$REPORT_TEMPLATE_DIR'/create_report.py'
+PROCESS_COUNT_FILE_SCRIPT=$PIPELINE_HOME'/process_count_files.R'
 
 # R script for calling DESeq and performing the differential expression analysis:
 DESEQ_SCRIPT=$PIPELINE_HOME"/deseq_original.R"
@@ -541,15 +542,28 @@ fi
 
 if [ $TEST -eq $NUM0 ]; then
 
+	#if used STAR for alignment or was directly provided with BAM files, get the read counts: 
+	if [[ $ALIGNER == $STAR  ]] || [[ $ALN -eq $NUM0 ]] ; then
 
-	if [[ $ALIGNER == $STAR  ]]; then
+		#a tag for the temporary count file:
+		TMP='.tmp'
 
     		#create the count files from the BAM files
     		for sample in $( cut -f1 $VALID_SAMPLE_FILE ); do
+		    COUNT_FILE=$COUNTS_DIR'/'$sample$COUNTFILE_SUFFIX
+
     		    featureCounts -a $GTF \
-				  -o $COUNTS_DIR'/'$sample$COUNTFILE_SUFFIX \
+				  -o $COUNT_FILE$TMP \
 				  -t exon \
 				  -g gene_name $PROJECT_DIR"/"$SAMPLE_DIR_PREFIX$sample"/"$ALN_DIR_NAME"/"$sample$SORTED_TAG$BAM_EXTENSION
+
+		    Rscript \
+			$PROCESS_COUNT_FILE_SCRIPT \
+			$COUNT_FILE$TMP \
+			$COUNT_FILE || { echo "Parsing of the raw count files failed.  Exiting."; exit 1; }
+		    
+                    rm $COUNT_FILE$TMP &
+
     		done
 	elif [[ $ALIGNER == $SNAPR ]]; then
 	    #move the count files

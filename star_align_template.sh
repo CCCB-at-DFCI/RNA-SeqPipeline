@@ -127,7 +127,7 @@ rm $DEFAULT_SAM &
 rm $SORTED_SAM &
 
 #remove the empty tmp directories that STAR did not cleanup
-rmdir $BASE'_tmp'
+rmdir $BASE'._tmp'
 rmdir $OUTDIR'/tmp'
 
 chmod 744 $OUTDIR
