@@ -615,7 +615,7 @@ if [ -e "$CONTRAST_FILE" ]; then
     		conditionB=$(echo $contrast | awk '{print $2}')
 
     		if [ $TEST -eq $NUM0 ]; then
-    			Rscript $DESEQ_SCRIPT $DESEQ_RESULT_DIR $DESIGN_MTX_FILE $conditionA $conditionB
+    			Rscript $DESEQ_SCRIPT $DESEQ_RESULT_DIR $DESIGN_MTX_FILE $DESEQ_OUTFILE_TAG $conditionA $conditionB
 		else
 			echo "Perform mock DESeq step on contrast between "$conditionA "and" $conditionB
     		fi

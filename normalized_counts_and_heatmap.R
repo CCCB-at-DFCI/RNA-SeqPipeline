@@ -73,14 +73,14 @@ select<-order(rowMeans(nc), decreasing=TRUE)[1:NUM_GENES]
 heatmapcols<-colorRampPalette(brewer.pal(9, "GnBu"))(100)
 
 #set the longest dimension of the image:
-longest_dimension<-800 #pixels
+shortest_dimension<-1200 #pixels
 sample_count<-ncol(vsdFull)
-ratio<-NUM_GENES/sample_count
+ratio<-0.25*NUM_GENES/sample_count
 
 #most of the time there will be more genes than samples
 #set the aspect ratio of the heatmap accordingly
-h<-longest_dimension
-w<-longest_dimension/ratio
+h<-shortest_dimension*ratio
+w<-shortest_dimension
 
 #however, if more samples than genes, switch the dimensions:
 if (ratio < 1)
@@ -90,7 +90,9 @@ if (ratio < 1)
 	h<-temp
 }
 
+text_size = 1.5+1/log10(NUM_GENES)
+
 #write the heatmap as a png:
 png(filename=paste(OUTPUT_DIR,HEATMAP_FILE, sep="/"), width=w, height=h, units="px")
-heatmap.2(exprs(vsdFull)[select,], col=heatmapcols, trace="none", margin=c(10,6))
+heatmap.2(exprs(vsdFull)[select,], col=heatmapcols, trace="none", margin=c(12,12), cexRow=text_size, cexCol=text_size)
 dev.off()
