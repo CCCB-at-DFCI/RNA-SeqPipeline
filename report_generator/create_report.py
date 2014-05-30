@@ -78,11 +78,20 @@ def inject_qc_reports(output_report_dir, template_html, all_sample_ids, qc_dir, 
             s = match
             s = re.sub(SAMPLE_ID, sample_id, s)
 
+            #a location relative to the output directory (for use in the html page)
             qc_report = os.path.join(qc_dir, sample_id, sample_report)
+            
+            #an absolute location of the html report on the filesystem
+            absolute_location = os.path.join(output_report_dir, qc_report)
+
             #if the qc report was not created (e.g. error with RNA-SeQC)
-            if not os.path.isfile(qc_report):
-                absolute_location = os.path.join(output_report_dir, qc_report)
+            if not os.path.isfile(absolute_location):
+                print 'Could not find result report for sample '+str(sample_id)
+                if not os.path.isdir(os.path.dirname(absolute_location)):
+                    print 'Creating directory at'+str(os.path.dirname(absolute_location))
+                    os.makedirs(os.path.dirname(absolute_location))		
                 open(absolute_location, 'a').close() #'touch' the file
+                print 'Copying error report'
                 shutil.copy(error_report, absolute_location)
             s = re.sub(REPORT_LINK, qc_report, s)
 

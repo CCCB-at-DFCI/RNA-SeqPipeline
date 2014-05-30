@@ -94,5 +94,5 @@ text_size = 1.5+1/log10(NUM_GENES)
 
 #write the heatmap as a png:
 png(filename=paste(OUTPUT_DIR,HEATMAP_FILE, sep="/"), width=w, height=h, units="px")
-heatmap.2(exprs(vsdFull)[select,], col=heatmapcols, trace="none", margin=c(12,12), cexRow=text_size, cexCol=text_size)
+heatmap.2(exprs(vsdFull)[select,], col=heatmapcols, trace="none", margin=c(15,12), cexRow=text_size, cexCol=text_size)
 dev.off()
