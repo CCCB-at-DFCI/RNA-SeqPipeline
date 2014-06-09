@@ -46,7 +46,7 @@
 						<a data-toggle="tab" href="#norm_counts">Normalized Counts</a>
 					</li>
 					<li>
-						<a data-toggle="tab" href="#heatmap">Heatmap</a>
+						<a data-toggle="tab" href="#heatmap">Heatmaps</a>
 					</li>
 					<li>
 						<a data-toggle="tab" href="#gsea">GSEA</a>
@@ -56,25 +56,25 @@
 				<div class="tab-content">
 					<div class="tab-pane fade" id="quality_report">
 
-					<div class="container">
-						<h2>Click on a sample to view the quality report</h2>
-					</div>
-					<div id="quality_report_section" class="container">
-						<div class="row">
-							<!-- #QC_REPORT#
-							<div class="panel panel-primary">
-		  						<div id="#SAMPLE_ID#_panel" class="panel-heading keep-pointer">
-		    						<h3 class="panel-title">#SAMPLE_ID#</h3>
-		  						</div>
-		 			 			<div id="#SAMPLE_ID#_view" class="panel-body content-panel">
-									<iframe src="#REPORT_LINK#" class="qc_report_iframe" marginwidth="0" marginheight="0" frameborder="0" vspace="0" hspace="0">
-									</iframe>
-		  						</div>
-							</div>
-								#QC_REPORT#
-							-->
+						<div class="container">
+							<h2>Click on a sample to view the quality report</h2>
 						</div>
-					</div>
+						<div id="quality_report_section" class="container">
+							<div class="row">
+								<!-- #QC_REPORT#
+								<div class="panel panel-primary">
+		  							<div id="#SAMPLE_ID#_panel" class="panel-heading keep-pointer">
+		    								<h3 class="panel-title">#SAMPLE_ID#</h3>
+		  							</div>
+		 			 				<div id="#SAMPLE_ID#_view" class="panel-body content-panel">
+										<iframe src="#REPORT_LINK#" class="qc_report_iframe" marginwidth="0" marginheight="0" frameborder="0" vspace="0" hspace="0">
+										</iframe>
+		  							</div>
+								</div>
+								#QC_REPORT#
+								-->
+							</div>
+						</div>
 				</div>
 		  		<div class="tab-pane fade" id="differential_analysis">
 					<div class="simple_div">
@@ -105,16 +105,27 @@
 					</div>
 				</div>
 		  		<div class="tab-pane fade" id="heatmap">
-					<div class="simple_div">
-						<h2>Heatmap</h2>
-						<!--
-						#HEATMAP#
-						<div id="heatmap_div">
-							<img src="#HEATMAP_LOCATION#" alt="Heatmap file not processed/found"></img>
-						</div>
-						#HEATMAP#
-						-->
-					</div>
+					        <div class="container">
+                                                        <h2>Click on a contrast to see a heatmap of the most highly-expressed genes</h2>
+                                                </div>
+                                                <div id="heatmap_section" class="container">
+                                                        <div class="row">
+                                                                <!-- #HEATMAP#
+                                                                <div class="panel panel-primary">
+                                                                        <div id="#CONTRAST_ID#_heatmap_panel" class="panel-heading keep-pointer">
+                                                                                <h3 class="panel-title">#CONTRAST_ID#</h3>
+                                                                        </div>
+                                                                        <div id="#CONTRAST_ID#_heatmap_view" class="panel-body content-panel">
+										<div class="heatmap_div">
+											<img src="#HEATMAP_LOCATION#" alt="Heatmap file not processed/found" style="width: 95%;"></img>
+										</div>
+                                                                        </div>
+                                                                </div>
+                                                                #HEATMAP#
+                                                                -->
+                                                        </div>
+                                                </div>
+
 				</div>
 		  		<div class="tab-pane fade" id="gsea">
 					<div class="simple_div">

@@ -12,7 +12,7 @@ Takes the following arguments:
 4: full path to a directory containing ALL the RNA-seQC reports.  This is located inside the output report directory
 5: the name of the default output html created by RNA-seQC (usually report.html)
 6: full path to the directory containing the deseq results (normalized count files, differential contrast results)
-7: the name (NOT full path) of the heatmap created by Deseq.  Assumed to be located inside the deseq_results directory
+7: the identifying name (NOT full path) of the heatmaps created by Deseq.  Assumed to be located inside the deseq_results directory.  Just the suffix of the full filenames
 8: the name (NOT full path) of the file containing the normalized counts. This file is assumed to be located inside the deseq results directory
 """
 
@@ -52,6 +52,7 @@ def read_template_html(template_html_file):
     except IOError:
       sys.exit('Could not locate the template html file.')  
 
+
 def get_sample_ids(samples_file):
     #parse the sample file:
     all_sample_ids = []
@@ -64,9 +65,10 @@ def get_sample_ids(samples_file):
         sys.exit('Could not locate the sample file: '+str(samples_file))
 
 
-def get_deseq_files(deseq_result_dir, deseq_output_tag):
-    path = os.path.join(deseq_result_dir, "*"+deseq_output_tag+"*")
+def get_deseq_files(deseq_result_dir, file_tag):
+    path = os.path.join(deseq_result_dir, "*"+file_tag+"*")
     return glob.glob(path)
+
 
 def inject_qc_reports(output_report_dir, template_html, all_sample_ids, qc_dir, sample_report, error_report):
 
@@ -102,14 +104,20 @@ def inject_qc_reports(output_report_dir, template_html, all_sample_ids, qc_dir, 
     return template_html
 
 
-def inject_heatmap(template_html, heatmap_filepath):
+def inject_heatmaps(template_html, deseq_result_dir, all_heatmap_files, heatmap_file_tag):
 
     pattern = get_search_pattern(HEATMAP_SEARCH_STRING)
     match = extract_template_textblock(pattern, template_html)
     if match:
-        match = re.sub(HEATMAP_LOCATION, heatmap_filepath, match)
-        content = re.findall(DIV_REGEX, match, flags=re.DOTALL)
-        template_html = re.sub(pattern, content[0], template_html, flags=re.DOTALL)
+        new_content = ""
+        for heatmap in all_heatmap_files:
+            f = os.path.basename(heatmap).rstrip(heatmap_file_tag) #get the 'name' of the contrast performed
+            s = match
+            s = re.sub(CONTRAST_ID, f, s)
+            s = re.sub(HEATMAP_LOCATION, os.path.join(deseq_result_dir, os.path.basename(heatmap)), s)
+            content = re.findall(DIV_REGEX, s, flags=re.DOTALL)
+            new_content += content[0]
+        template_html = re.sub(pattern, new_content, template_html, flags=re.DOTALL)
     return template_html
 
 
@@ -155,16 +163,16 @@ def write_completed_template(completed_html_report, template_html):
 if __name__ == "__main__":
 
     if len(sys.argv) == 11:
-        template_html_file = sys.argv[1]
-        completed_html_report = sys.argv[2]
+        template_html_file = sys.argv[1] #full path to the template html file
+        completed_html_report = sys.argv[2] #full path to the formatted html file that will be created
         sample_file = sys.argv[3] #the full path to the valid sample file
-        qc_dir = sys.argv[4]
-        sample_report = sys.argv[5]
-        deseq_result_dir = sys.argv[6]
-        heatmap_file = sys.argv[7]
-        normalized_count_file = sys.argv[8]
-        deseq_output_tag = sys.argv[9]
-        error_report_file = sys.argv[10]
+        qc_dir = sys.argv[4] #full path to the QC output files
+        sample_report = sys.argv[5] #the name of the default output html report created by RNA-SeQC
+        deseq_result_dir = sys.argv[6] #full path to the directory containing the DESeq results
+        heatmap_file_tag = sys.argv[7] # a string/tag used to identify heatmap files (which are located in deseq_result_dir)
+        normalized_count_file = sys.argv[8] #the name (not path) of the file for the normalized counts
+        deseq_output_tag = sys.argv[9] # a string/tag used for identifying the output contrast files from DESeq
+        error_report_file = sys.argv[10] #full path to a html page which serves as an error page (in case RNASeQC fails)
 
         #ensure error file exists and read into a string:
         if not os.path.isfile(error_report_file):
@@ -175,6 +183,9 @@ if __name__ == "__main__":
 
         #get the deseq files:
         all_deseq_files = get_deseq_files(deseq_result_dir, deseq_output_tag)
+
+	#get the heatmap files:
+        all_heatmap_files = get_deseq_files(deseq_result_dir, heatmap_file_tag)
 
         #get the basename for the directory of the deseq results-- files are relative to this
         deseq_result_dir = os.path.basename(deseq_result_dir)
@@ -190,7 +201,7 @@ if __name__ == "__main__":
         all_samples = get_sample_ids(sample_file)
 
         html = inject_qc_reports(output_report_dir, html, all_samples, qc_dir, sample_report, error_report_file)
-        html = inject_heatmap(html, os.path.join(deseq_result_dir, heatmap_file))
+        html = inject_heatmaps(html, deseq_result_dir, all_heatmap_files, heatmap_file_tag)
         html = inject_normalized_count_file(html, os.path.join(deseq_result_dir, normalized_count_file))
         html = inject_deseq_results(html, deseq_result_dir, all_deseq_files)
 

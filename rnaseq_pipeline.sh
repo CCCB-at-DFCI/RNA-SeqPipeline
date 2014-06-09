@@ -603,7 +603,7 @@ DESEQ_RESULT_DIR=$REPORT_DIR'/'$DESEQ_RESULT_DIR
 mkdir $DESEQ_RESULT_DIR
 
 if [ $TEST -eq $NUM0 ]; then
-	Rscript $NORMALIZED_COUNTS_SCRIPT $DESEQ_RESULT_DIR $DESIGN_MTX_FILE $NORMALIZED_COUNTS_FILE $HEATMAP_FILE $HEATMAP_GENE_COUNT
+	Rscript $NORMALIZED_COUNTS_SCRIPT $DESEQ_RESULT_DIR $DESIGN_MTX_FILE $NORMALIZED_COUNTS_FILE
 else
 	echo "Perform mock normalized counts with DESeq."
 fi
@@ -615,7 +615,8 @@ if [ -e "$CONTRAST_FILE" ]; then
     		conditionB=$(echo $contrast | awk '{print $2}')
 
     		if [ $TEST -eq $NUM0 ]; then
-    			Rscript $DESEQ_SCRIPT $DESEQ_RESULT_DIR $DESIGN_MTX_FILE $DESEQ_OUTFILE_TAG $conditionA $conditionB
+    			echo Rscript $DESEQ_SCRIPT $DESEQ_RESULT_DIR $DESIGN_MTX_FILE $DESEQ_OUTFILE_TAG $conditionA $conditionB $HEATMAP_FILE $HEATMAP_GENE_COUNT
+    			Rscript $DESEQ_SCRIPT $DESEQ_RESULT_DIR $DESIGN_MTX_FILE $DESEQ_OUTFILE_TAG $conditionA $conditionB $HEATMAP_FILE $HEATMAP_GENE_COUNT
 		else
 			echo "Perform mock DESeq step on contrast between "$conditionA "and" $conditionB
     		fi
