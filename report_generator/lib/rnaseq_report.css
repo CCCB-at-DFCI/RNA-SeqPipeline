@@ -62,3 +62,8 @@ a:focus{
 .spacer-div{
 	padding:10px;
 }
+
+.top-and-bottom-padding{
+	padding-top:10px;
+	padding-bottom:10px;
+}

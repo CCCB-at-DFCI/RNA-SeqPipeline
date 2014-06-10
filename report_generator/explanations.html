@@ -1,0 +1,96 @@
+<!--
+This file contains snippets of html for use in populating the help section of the output report
+Sections are copied into the final HTML report as necessary (dependent on input parameters, etc)
+-->
+
+
+
+#QUALITY_REPORT_HELP#
+<div>
+	<h3>
+		Quality report
+	</h3>
+	RNA-Seq quality metrics are produced by the Broad Institute's <a href="http://www.broadinstitute.org/cancer/cga/rna-seqc" target="_blank">RNA-SeQC</a> tool.
+</div>
+#QUALITY_REPORT_HELP#
+
+
+
+
+#DESEQ_ANALYSIS_HELP#
+<div>
+	<h3>
+		DESeq Analysis
+	</h3>
+
+	Differential expression analysis was performed with the DESeq tool, provided as part of R's Bioconductor package.  
+	More detailed information can be found in the <a href="http://genomebiology.com/2010/11/10/r106" target="_blank">original DESeq publication</a>.  
+	In short, the analysis steps consist of: 
+	<ul>
+	<li>Count normalization.  By examining the counts of all genes across all samples, the software attempts to normalize for differences due to input library size.
+	An inherent assumption of this step is that <i>most</i> genes in a series of contrasts are not differentially expressed.  The normalized read counts for a particular 
+	sample are based on the median across all genes; this attempts to minimize the effect of highly expressed transcripts on the normalization procedure.</li>
+	<li>Using a negative binomial model to approximate the distribution of the read counts, a mean-dispersion relationship is determined from a local regression using a generalized
+	linear model of the gamma family.</li>
+	<li>For each gene, determine the probability of the observed counts under the null hypothesis that the counts in each condition are the same.  These P-values are 
+	adjusted using the standard Benjamini-Hochberg multiple testing correction to control the false-discovery rate (FDR). </li>
+	</ul>
+</div>
+#DESEQ_ANALYSIS_HELP#
+
+
+
+
+#NORMALIZED_COUNTS_HELP#
+<div>
+	<h3>
+		Calculation of normalized counts
+	</h3>
+	This step is performed in the DESeq analysis and attempts to control biases in the read counts due to input library size.  Assuming that most genes
+	are not differentially expressed, consistent differences in counts between samples provides a method of assessing the relative size of the input libraries.
+	Further details of the normalization procedure may be found in the DESeq publication.  
+</div>
+#NORMALIZED_COUNTS_HELP#
+
+
+#STAR_ALIGNER_HELP#
+<div>
+	<h3>
+	Read alignment
+	</h3>
+	Reads were mapped to the genome using the STAR aligner.  Further details <a href="http://bioinformatics.oxfordjournals.org/content/29/1/15" target="_blank">here</a>.
+</div>
+#STAR_ALIGNER_HELP#
+
+
+#SNAPR_ALIGNER_HELP#
+<div>
+	<h3>
+		Read alignment
+	</h3>
+	Reads were mapped to the genome using the SNAPR aligner.  Further details <a href="http://price.systemsbiology.net/SNAPR" target="_blank">here</a>.
+</div>
+#SNAPR_ALIGNER_HELP#
+
+
+#NO_ALIGNER_HELP#
+<div>
+	<h3>
+		Read alignment
+	</h3>
+	Reads were mapped to the genome using an unknown aligner.  Analysis was performed on supplied BAM files of unknown origin.
+</div>
+#NO_ALIGNER_HELP#
+
+
+
+
+#HEATMAP_HELP#
+<div>
+	<h3>
+		Heatmaps
+	</h3>
+	Heatmaps were prepared on a contrast-level basis.  For each contrast, we take the most highly expressed genes as determined by their mean across all samples.  As this report
+	is prepared as an initial inspection of the data, these images may not be appropriate for every study.  Further, specific analysis can be arranged with the assistance of the CCCB.
+</div>
+#HEATMAP_HELP#

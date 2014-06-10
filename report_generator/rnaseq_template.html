@@ -10,7 +10,7 @@
     <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>-->
     <script src="lib/jquery.min.js"></script>
     <!-- Bootstrap -->
-    <link href="lib/bootstrap.min.css" rel="stylesheet">
+    <link href="lib/bootstrap.min.edit.css" rel="stylesheet">
     
     <!-- Custom css-->	
     <link href="lib/rnaseq_report.css" rel="stylesheet">
@@ -51,6 +51,9 @@
 					<li>
 						<a data-toggle="tab" href="#gsea">GSEA</a>
 					</li>
+					<li>
+						<a data-toggle="tab" href="#help">Help</a>
+					</li>
 				</ul>
 
 				<div class="tab-content">
@@ -67,7 +70,10 @@
 		    								<h3 class="panel-title">#SAMPLE_ID#</h3>
 		  							</div>
 		 			 				<div id="#SAMPLE_ID#_view" class="panel-body content-panel">
-										<iframe src="#REPORT_LINK#" class="qc_report_iframe" marginwidth="0" marginheight="0" frameborder="0" vspace="0" hspace="0">
+								                <div class="top-and-bottom-padding">
+											<a href="#REPORT_LINK#" target="#SAMPLE_ID#_iframe">Return to original QC report</a>
+										</div>
+										<iframe id="#SAMPLE_ID#_iframe" name="#SAMPLE_ID#_iframe" src="#REPORT_LINK#" class="qc_report_iframe" marginwidth="0" marginheight="0" frameborder="0" vspace="0" hspace="0">
 										</iframe>
 		  							</div>
 								</div>
@@ -129,9 +135,18 @@
 				</div>
 		  		<div class="tab-pane fade" id="gsea">
 					<div class="simple_div">
-						<h2>GSEA has not been performed</h2></div>
+						<h2>GSEA has not been performed</h2>
 					</div>
 				</div>
+                                <div class="tab-pane fade" id="help">
+                                        <div class="simple_div">
+                                                <h2>Explanation of this output report</h2>
+						<!-- #OUTPUT_EXPLANATION#
+						
+						#OUTPUT_EXPLANATION# 
+						-->
+                                        </div>
+                               	</div>
 	</div>
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
 

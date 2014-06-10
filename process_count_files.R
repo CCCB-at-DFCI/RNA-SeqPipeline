@@ -1,3 +1,7 @@
+## This script parses the raw count files produced by subread, etc.
+## Only takes the gene ids and counts from each line-- removes the quotes 
+## from the gene id, which is something that is not as straightforward with a tool like 'cut'
+
 args<-commandArgs(TRUE)
 in_file<-args[1]
 out_file<-args[2]

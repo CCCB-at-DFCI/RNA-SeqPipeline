@@ -30,7 +30,18 @@ NORM_COUNT_SEARCH_STRING = "#NORM_COUNT_FILE#"
 NORM_COUNT = "#NORM_COUNT_FILE_LINK#"
 TRUNCATED_NORM_COUNT_FILENAME = "#TRUNCATED_NORM_COUNT_FILENAME#"
 DIV_REGEX = "<div.*</div>" #greedy match!
+DEFAULT_HELP_SECTIONS = [
+    "#DESEQ_ANALYSIS_HELP#",
+    "#QUALITY_REPORT_HELP#",
+    "#NORMALIZED_COUNTS_HELP#",
+    "#HEATMAP_HELP#"]
+NO_ALIGNER_HELP = "#NO_ALIGNER_HELP#"
+STAR_ALIGNER_HELP = "#STAR_ALIGNER_HELP#"
+SNAPR_ALIGNER_HELP = "#SNAPR_ALIGNER_HELP#"
+OUTPUT_EXPLANATION = "#OUTPUT_EXPLANATION#"
 
+STAR = "star"
+SNAPR = "snapr"
 
 def get_search_pattern(target):
     return "<!--\s*"+str(target)+".*"+str(target)+"\s*-->"
@@ -68,6 +79,31 @@ def get_sample_ids(samples_file):
 def get_deseq_files(deseq_result_dir, file_tag):
     path = os.path.join(deseq_result_dir, "*"+file_tag+"*")
     return glob.glob(path)
+
+
+def inject_help_section(template_html, help_html_file, aligner):
+    
+    new_content = ""
+    help_text = read_template_html(help_html_file)
+    for section in DEFAULT_HELP_SECTIONS:
+        content = re.findall(DIV_REGEX, extract_template_textblock(str(section)+".*"+str(section), help_text), flags=re.DOTALL)
+        new_content += content[0]
+
+    #aligner-specific help
+    if aligner.lower() == STAR.lower():
+        section = STAR_ALIGNER_HELP
+    elif aligner.lower() == SNAPR.lower():
+        section = STAR_ALIGNER_HELP
+    else:
+        section = NO_ALIGNER_HELP
+
+    content = re.findall(DIV_REGEX, extract_template_textblock(str(section)+".*"+str(section), help_text), flags=re.DOTALL)
+    new_content += content[0]
+
+    #place the new content into the output page:
+    pattern = get_search_pattern(OUTPUT_EXPLANATION)
+    template_html = re.sub(pattern, new_content, template_html, flags=re.DOTALL)
+    return template_html
 
 
 def inject_qc_reports(output_report_dir, template_html, all_sample_ids, qc_dir, sample_report, error_report):
@@ -162,7 +198,7 @@ def write_completed_template(completed_html_report, template_html):
 
 if __name__ == "__main__":
 
-    if len(sys.argv) == 11:
+    if len(sys.argv) == 13:
         template_html_file = sys.argv[1] #full path to the template html file
         completed_html_report = sys.argv[2] #full path to the formatted html file that will be created
         sample_file = sys.argv[3] #the full path to the valid sample file
@@ -173,6 +209,8 @@ if __name__ == "__main__":
         normalized_count_file = sys.argv[8] #the name (not path) of the file for the normalized counts
         deseq_output_tag = sys.argv[9] # a string/tag used for identifying the output contrast files from DESeq
         error_report_file = sys.argv[10] #full path to a html page which serves as an error page (in case RNASeQC fails)
+        help_html_file = sys.argv[11] #full path to a template page containing the help information
+        aligner = sys.argv[12] #which aligner was used
 
         #ensure error file exists and read into a string:
         if not os.path.isfile(error_report_file):
@@ -204,6 +242,7 @@ if __name__ == "__main__":
         html = inject_heatmaps(html, deseq_result_dir, all_heatmap_files, heatmap_file_tag)
         html = inject_normalized_count_file(html, os.path.join(deseq_result_dir, normalized_count_file))
         html = inject_deseq_results(html, deseq_result_dir, all_deseq_files)
+        html = inject_help_section(html, help_html_file, aligner)
 
         write_completed_template(completed_html_report, html)
 
