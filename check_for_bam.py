@@ -37,21 +37,15 @@ def main(valid_sample_file, project_dir, sample_dir_prefix, align_dir_name, bam_
        
 if __name__=="__main__":
 
-  #see the meaning of the input args further below
-  if len(sys.argv) == 6:
-    valid_sample_file = sys.argv[1]
-    project_dir = sys.argv[2]
-    sample_dir_prefix = sys.argv[3]
-    align_dir_name = sys.argv[4]
-    bam_suffix = sys.argv[5]
+  try:
+    valid_sample_file = os.environ['VALID_SAMPLE_FILE']
+    project_dir = os.environ['PROJECT_DIR']
+    sample_dir_prefix = os.environ['SAMPLE_DIR_PREFIX']
+    align_dir_name = os.environ['ALN_DIR_NAME']
+    bam_suffix = str(os.environ['SORTED_TAG'])+str(os.environ['BAM_EXTENSION'])
     
     main(valid_sample_file, project_dir, sample_dir_prefix, align_dir_name, bam_suffix)
 
-  else:
-    print "Please provide the correct input args:\n"
-    print "\t1: The 'valid samples' file (produced by another python script\n"
-    print "\t2: The project directory \n"
-    print "\t3: Sample directory prefix-- usually 'Sample_'.  Thus, sample-specific directories would be 'Sample_XXX' for sample XXX\n"
-    print "\t4: The alignment output directory (contained in the sample-specific directory)\n"
-    print "\t5: The suffix for the bam files\n"
+  except KeyError:
+    sys.exit("There was an error in the script while checking for BAM files.")
 

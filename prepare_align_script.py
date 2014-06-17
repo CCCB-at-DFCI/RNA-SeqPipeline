@@ -7,11 +7,11 @@ import os
 import sys
 import re
 import glob
-
+import traceback
 
 #convenience definitions:
-SNAPR = 'snapr'
-STAR = 'star'
+SNAPR = os.environ['SNAPR']
+STAR = os.environ['STAR']
 
 
 class SampleMetaData:
@@ -201,52 +201,49 @@ def write_script(sample):
 if __name__ == '__main__':
 
     """
-    takes the following input arguments ([0] is script name):
-    argv[1] is the sample file (tab-separated).  Each row has the sample name and the "condition"
-    argv[2] is the parent directory containing all the sample subdirectories.  Also known as the project directory
-    argv[3] is the output directory for the alignment files (e.g. BAM).
+    samples_file: is the sample file (tab-separated).  Each row has the sample name and the "condition"
+    project_dir: is the parent directory containing all the sample subdirectories.  Also known as the project directory
+    output_dir: is the output directory for the alignment files (e.g. BAM).
             -- this is relative to the sample-specific directory!  Thus, not a full path
-    argv[4] specifies the name (not the path) of the experiment meta-data.  Often SampleSheet.csv
-    argv[5] specifies if paired-end (1) or single-end (0)
-    argv[6] is the assembly (hg19, mm10, etc)
-    argv[7] is the path to an output file that will report the valid samples to align.
+    samplesheet: specifies the name (not the path) of the experiment meta-data.  Often SampleSheet.csv
+    paired_end_reads: specifies if paired-end (1) or single-end (0)
+    assembly: is the genome (hg19, mm10, etc)
+    validated_sample_filepath: is the FULL PATH to an output file that will report the valid samples to align.
             -- That is, if there is an error (e.g. a missing FASTQ) for one of the samples, we will skip the alignment
             -- This file will contain a subset of the samples specified in the originl sample file (argv[1]).
             -- If everything is good, then this file ends up being a verbatim copy of the original sample file.
-    argv[8] is a template script for performing the alignment.  This will be filled in by this script
-    argv[9] is a "nametag" for the formatted/injected scripts that this will create.  This helps identify the alignment script that will be called later on
-    argv[10] is the prefix for the sample directory (e.g. with prefix='Sample_' for sample XXX the directory would be 'Sample_XXX')
-    argv[11] is a full path to the GTF file for this genome
-    argv[12] is a full path to the directory containing the genome index
-    argv[13] is the aligner to use
-    argv[14] is a file suffix to place on the output BAM file so that it may be easily identified later on in the pipeline
-    argv[15] is a full path to the directory containing the transcriptome index
+    template_script: is a template script for performing the alignment.  This will be filled in by this script
+    script_nametag: is a "nametag" for the formatted/injected scripts that this will create.  This helps identify the alignment script that will be called later on
+    sample_dir_prefix: is the prefix for the sample directory (e.g. with prefix='Sample_' for sample XXX the directory would be 'Sample_XXX')
+    gtf_file: a full path to a gtf file for this genome
+    genome_index: is a full path to the genome index for the aligner
+    bam_suffix: is a file suffix to place on the output BAM file so that it may be easily identified later on in the pipeline
     """
 
-    max_args = 15
-    if len(sys.argv) >= max_args:
-        samples_file = sys.argv[1]
-        project_dir = sys.argv[2]
-        output_dir = sys.argv[3]
-        samplesheet = sys.argv[4]
-        paired_end_reads = int(sys.argv[5])
-        assembly = sys.argv[6]
-        validated_sample_filepath = sys.argv[7]
-        template_script = sys.argv[8]
-        script_nametag = sys.argv[9]
-        sample_dir_prefix = sys.argv[10]
-        gtf_file = sys.argv[11]
-        genome_index = sys.argv[12]
-        aligner = sys.argv[13]
-        bam_suffix = sys.argv[14]
-        transcriptome_index = None
+    try:
+        samples_file = os.environ['SAMPLES_FILE']
+        project_dir = os.environ['PROJECT_DIR']
+        output_dir = os.environ['ALN_DIR_NAME']
+        samplesheet = os.environ['SAMPLE_SHEET_NAME']
+        paired_end_reads = int(os.environ['PAIRED_READS'])
+        assembly = os.environ['ASSEMBLY']
+        validated_sample_filepath = os.environ['VALID_SAMPLE_FILE']
+        template_script = os.environ['ALIGN_SCRIPT']
+        script_nametag = os.environ['FORMATTED_ALIGN_SCRIPT_NAMETAG']
+        sample_dir_prefix = os.environ['SAMPLE_DIR_PREFIX']
+        genome_index = os.environ['GENOME_INDEX']
+        bam_suffix = str(os.environ['SORTED_TAG'])+str(os.environ['BAM_EXTENSION'])
+        gtf_file = os.environ['GTF']
+        aligner = os.environ['ALIGNER']
 
         if aligner.lower() == SNAPR.lower():
             try:
-                transcriptome_index = sys.argv[max_args]
+                transcriptome_index = os.environ['TRANSCRIPTOME_INDEX']
             except IndexError:
                 print 'If running SNAPR alignment, please supply the transcriptome index'
                 sys.exit(1)
+        else:
+            transcriptome_index=""
 
         #create a data object to hold all the metadata about the project/sample:
         sample_metadata = SampleMetaData(
@@ -290,5 +287,5 @@ if __name__ == '__main__':
         #write the scripts
         map(write_script, all_samples)
 
-    else:
+    except KeyError:
         sys.exit("Alignment script preparation failed.")

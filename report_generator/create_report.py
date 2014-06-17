@@ -4,18 +4,6 @@ import os
 import glob
 import shutil
 
-"""
-Takes the following arguments:
-1: a full path to the html template file.  This *should* be centrally located-- since it is just read-in
-2: full path to the completed html file (the one to be filled-in).  This should ideally be in the output report directory
-3: the valid sample file used in other steps of the pipeline. Two columns-- first column is the sample names
-4: full path to a directory containing ALL the RNA-seQC reports.  This is located inside the output report directory
-5: the name of the default output html created by RNA-seQC (usually report.html)
-6: full path to the directory containing the deseq results (normalized count files, differential contrast results)
-7: the identifying name (NOT full path) of the heatmaps created by Deseq.  Assumed to be located inside the deseq_results directory.  Just the suffix of the full filenames
-8: the name (NOT full path) of the file containing the normalized counts. This file is assumed to be located inside the deseq results directory
-"""
-
 #some regexes:
 QC_SEARCH_STRING = "#QC_REPORT#"
 DESEQ_SEARCH_STRING = "#DIFFERENTIAL_EXP_RESULTS#"
@@ -40,8 +28,8 @@ STAR_ALIGNER_HELP = "#STAR_ALIGNER_HELP#"
 SNAPR_ALIGNER_HELP = "#SNAPR_ALIGNER_HELP#"
 OUTPUT_EXPLANATION = "#OUTPUT_EXPLANATION#"
 
-STAR = "star"
-SNAPR = "snapr"
+STAR = os.environ['STAR']
+SNAPR = os.environ['SNAPR']
 
 def get_search_pattern(target):
     return "<!--\s*"+str(target)+".*"+str(target)+"\s*-->"
@@ -198,19 +186,19 @@ def write_completed_template(completed_html_report, template_html):
 
 if __name__ == "__main__":
 
-    if len(sys.argv) == 13:
-        template_html_file = sys.argv[1] #full path to the template html file
-        completed_html_report = sys.argv[2] #full path to the formatted html file that will be created
-        sample_file = sys.argv[3] #the full path to the valid sample file
-        qc_dir = sys.argv[4] #full path to the QC output files
-        sample_report = sys.argv[5] #the name of the default output html report created by RNA-SeQC
-        deseq_result_dir = sys.argv[6] #full path to the directory containing the DESeq results
-        heatmap_file_tag = sys.argv[7] # a string/tag used to identify heatmap files (which are located in deseq_result_dir)
-        normalized_count_file = sys.argv[8] #the name (not path) of the file for the normalized counts
-        deseq_output_tag = sys.argv[9] # a string/tag used for identifying the output contrast files from DESeq
-        error_report_file = sys.argv[10] #full path to a html page which serves as an error page (in case RNASeQC fails)
-        help_html_file = sys.argv[11] #full path to a template page containing the help information
-        aligner = sys.argv[12] #which aligner was used
+    try:
+        template_html_file = os.environ['REPORT_TEMPLATE_HTML'] #full path to the template html file
+        completed_html_report = os.path.join(os.environ['REPORT_DIR'], os.environ['FINAL_RESULTS_REPORT']) #full path to the formatted html file that will be created
+        sample_file = os.environ['VALID_SAMPLE_FILE'] #the full path to the valid sample file
+        qc_dir = os.path.join(os.environ['REPORT_DIR'], os.environ['RNA_SEQC_DIR']) #full path to the QC output files
+        sample_report = os.environ['DEFAULT_RNA_SEQC_REPORT'] #the name of the default output html report created by RNA-SeQC
+        deseq_result_dir = os.environ['DESEQ_RESULT_DIR'] #full path to the directory containing the DESeq results
+        heatmap_file_tag = os.environ['HEATMAP_FILE'] # a string/tag used to identify heatmap files (which are located in deseq_result_dir)
+        normalized_count_file = os.environ['NORMALIZED_COUNTS_FILE'] #the name (not path) of the file for the normalized counts
+        deseq_output_tag = os.environ['DESEQ_OUTFILE_TAG'] # a string/tag used for identifying the output contrast files from DESeq
+        error_report_file = os.environ['ERROR_PAGE'] #full path to a html page which serves as an error page (in case RNASeQC fails)
+        help_html_file = os.environ['HELP_PAGE_CONTENT'] #full path to a template page containing the help information
+        aligner = os.environ['ALIGNER'] #which aligner was used
 
         #ensure error file exists and read into a string:
         if not os.path.isfile(error_report_file):

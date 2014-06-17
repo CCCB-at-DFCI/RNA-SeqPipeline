@@ -33,22 +33,14 @@ def main(valid_sample_file, design_mtx_file, project_dir, countfile_dir, countfi
        
 if __name__=="__main__":
 
-  #see the meaning of the input args further below
-  if len(sys.argv) == 6:
-    valid_sample_file = sys.argv[1]
-    design_mtx_file = sys.argv[2]
-    project_dir = sys.argv[3]
-    countfile_dir = sys.argv[4]
-    countfile_suffix = sys.argv[5]
+  try:
+    valid_sample_file = os.environ['VALID_SAMPLE_FILE']
+    design_mtx_file = os.environ['DESIGN_MTX_FILE']
+    project_dir = os.environ['PROJECT_DIR']
+    countfile_dir = os.environ['COUNTS_DIR']
+    countfile_suffix = os.environ['COUNTFILE_SUFFIX']
     
     main(valid_sample_file, design_mtx_file, project_dir, countfile_dir, countfile_suffix)
 
-  else:
-    print "Please provide the correct input args:\n"
-    print "\t1: The 'valid samples' file (produced by another python script\n"
-    print "\t2: An output file for the design matrix file (to be ingested by R when running differential analysis)\n"
-    print "\t3: The project directory \n"
-    print "\t4: The directory containing all the count files (just the name, not a full path)\n"
-    print "\t5: The suffix for the count files\n"
-
+  except KeyError:
     sys.exit("Failed at creating design matrix for differential expression analysis.")
