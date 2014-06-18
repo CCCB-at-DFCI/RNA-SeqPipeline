@@ -6,6 +6,7 @@ import shutil
 
 #some regexes:
 QC_SEARCH_STRING = "#QC_REPORT#"
+GSEA_SEARCH_STRING = "#GSEA_REPORT#"
 DESEQ_SEARCH_STRING = "#DIFFERENTIAL_EXP_RESULTS#"
 CONTRAST_ID = "#CONTRAST_ID#"
 DESEQ_FILE_LINK = "#DESEQ_FILE_LINK#"
@@ -128,6 +129,35 @@ def inject_qc_reports(output_report_dir, template_html, all_sample_ids, qc_dir, 
     return template_html
 
 
+def inject_gsea_reports(output_report_dir, template_html, gsea_dir, gsea_default_html):
+
+    pattern = get_search_pattern(GSEA_SEARCH_STRING)
+    match = extract_template_textblock(pattern, template_html)
+    if match:
+	new_content = ""
+
+        #get all the reports contained in the gsea directory:
+        all_reports = glob.glob(os.path.join(gsea_dir, '*', gsea_default_html))
+
+        for report in all_reports:
+            #to the report relative to the output report directory
+            relative_path = os.path.relpath(report, output_report_dir)
+        
+            #get the name of the contrast by parsing the report's parent directory
+            parent_dir_name = os.path.basename(os.path.dirname(report))
+            contrast_id = parent_dir_name.split('.')[0]
+
+            s = match
+            s = re.sub(CONTRAST_ID, contrast_id, s)
+            s = re.sub(REPORT_LINK, relative_path, s)
+
+            content = re.findall(DIV_REGEX, s, flags=re.DOTALL)
+            new_content += content[0]
+
+        template_html = re.sub(pattern, new_content, template_html, flags=re.DOTALL)
+    return template_html
+
+
 def inject_heatmaps(template_html, deseq_result_dir, all_heatmap_files, heatmap_file_tag):
 
     pattern = get_search_pattern(HEATMAP_SEARCH_STRING)
@@ -167,12 +197,12 @@ def inject_deseq_results(template_html, deseq_dir, deseq_files):
     return template_html
 
 
-def inject_normalized_count_file(template_html, normalized_count_filepath):
+def inject_normalized_count_file(template_html, normalized_count_filepath, output_report_dir):
 
     pattern = get_search_pattern(NORM_COUNT_SEARCH_STRING)
     match = extract_template_textblock(pattern, template_html)
     if match:
-        match = re.sub(NORM_COUNT, normalized_count_filepath, match)
+        match = re.sub(NORM_COUNT, os.path.relpath(normalized_count_filepath, output_report_dir), match)
         match = re.sub(TRUNCATED_NORM_COUNT_FILENAME, os.path.basename(normalized_count_filepath), match)
         content = re.findall(DIV_REGEX, match, flags=re.DOTALL)
         template_html = re.sub(pattern, content[0], template_html, flags=re.DOTALL)
@@ -194,11 +224,13 @@ if __name__ == "__main__":
         sample_report = os.environ['DEFAULT_RNA_SEQC_REPORT'] #the name of the default output html report created by RNA-SeQC
         deseq_result_dir = os.environ['DESEQ_RESULT_DIR'] #full path to the directory containing the DESeq results
         heatmap_file_tag = os.environ['HEATMAP_FILE'] # a string/tag used to identify heatmap files (which are located in deseq_result_dir)
-        normalized_count_file = os.environ['NORMALIZED_COUNTS_FILE'] #the name (not path) of the file for the normalized counts
+        normalized_count_file = os.environ['NORMALIZED_COUNTS_FILE'] #the full path of the file for the normalized counts
         deseq_output_tag = os.environ['DESEQ_OUTFILE_TAG'] # a string/tag used for identifying the output contrast files from DESeq
         error_report_file = os.environ['ERROR_PAGE'] #full path to a html page which serves as an error page (in case RNASeQC fails)
         help_html_file = os.environ['HELP_PAGE_CONTENT'] #full path to a template page containing the help information
         aligner = os.environ['ALIGNER'] #which aligner was used
+        gsea_dir = os.environ['GSEA_OUTPUT_DIR'] #full path to the directory containing the GSEA analyses
+        gsea_default_html = os.environ['GSEA_DEFAULT_HTML'] #the name of the default html report that GSEA produces
 
         #ensure error file exists and read into a string:
         if not os.path.isfile(error_report_file):
@@ -228,9 +260,10 @@ if __name__ == "__main__":
 
         html = inject_qc_reports(output_report_dir, html, all_samples, qc_dir, sample_report, error_report_file)
         html = inject_heatmaps(html, deseq_result_dir, all_heatmap_files, heatmap_file_tag)
-        html = inject_normalized_count_file(html, os.path.join(deseq_result_dir, normalized_count_file))
+        html = inject_normalized_count_file(html, normalized_count_file, output_report_dir)
         html = inject_deseq_results(html, deseq_result_dir, all_deseq_files)
         html = inject_help_section(html, help_html_file, aligner)
+        html = inject_gsea_reports(output_report_dir, html, gsea_dir, gsea_default_html)
 
         write_completed_template(completed_html_report, html)
 

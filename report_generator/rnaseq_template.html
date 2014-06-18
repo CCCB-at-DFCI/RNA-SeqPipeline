@@ -72,6 +72,7 @@
 		 			 				<div id="#SAMPLE_ID#_view" class="panel-body content-panel">
 								                <div class="top-and-bottom-padding">
 											<a href="#REPORT_LINK#" target="#SAMPLE_ID#_iframe">Return to original QC report</a>
+                                                                        	        <a class="padded-link" href="#REPORT_LINK#" target="_blank">Open in new tab</a>
 										</div>
 										<iframe id="#SAMPLE_ID#_iframe" name="#SAMPLE_ID#_iframe" src="#REPORT_LINK#" class="qc_report_iframe" marginwidth="0" marginheight="0" frameborder="0" vspace="0" hspace="0">
 										</iframe>
@@ -134,8 +135,28 @@
 
 				</div>
 		  		<div class="tab-pane fade" id="gsea">
-					<div class="simple_div">
-						<h2>GSEA has not been performed</h2>
+                                	<div class="container">
+                                        	<h2>Click on a contrast to view the GSEA report</h2>
+                                        </div>				
+	                                <div id="gsea_report_section" class="container">
+						<div class="row">
+							<!-- #GSEA_REPORT#
+                                                        <div class="panel panel-primary">
+                                                        	<div id="#CONTRAST_ID#_gsea_panel" class="panel-heading keep-pointer">
+                                                                	<h3 class="panel-title">#CONTRAST_ID#</h3>
+                                                                </div>
+                                                                <div id="#CONTRAST_ID#_gsea_view" class="panel-body content-panel">
+                                                                	<div class="top-and-bottom-padding">
+                                                                        	<a href="#REPORT_LINK#" target="#CONTRAST_ID#_iframe">Return to original GSEA report</a>
+                                                                        	<a class="padded-link" href="#REPORT_LINK#" target="_blank">Open in new tab</a>
+                                                                        </div>
+									<iframe id="#CONTRAST_ID#_iframe" name="#CONTRAST_ID#_iframe" src="#REPORT_LINK#" class="gsea_report_iframe" marginwidth="0" marginheight="0" frameborder="0" vspace="0" hspace="0">
+                                                                        </iframe>
+                                                                </div>
+							</div>
+                                                        #GSEA_REPORT#
+                                                        -->
+						</div>
 					</div>
 				</div>
                                 <div class="tab-pane fade" id="help">

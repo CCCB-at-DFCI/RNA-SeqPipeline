@@ -470,8 +470,11 @@ mkdir $REPORT_DIR
 DESEQ_RESULT_DIR=$REPORT_DIR'/'$DESEQ_RESULT_DIR
 mkdir $DESEQ_RESULT_DIR
 
+NORMALIZED_COUNTS_FILE=$DESEQ_RESULT_DIR'/'$NORMALIZED_COUNTS_FILE
+export NORMALIZED_COUNTS_FILE
+
 if [ $TEST -eq $NUM0 ]; then
-	Rscript $NORMALIZED_COUNTS_SCRIPT $DESEQ_RESULT_DIR $DESIGN_MTX_FILE $NORMALIZED_COUNTS_FILE
+	Rscript $NORMALIZED_COUNTS_SCRIPT $DESIGN_MTX_FILE $NORMALIZED_COUNTS_FILE
 else
 	echo "Perform mock normalized counts with DESeq."
 fi
@@ -517,6 +520,51 @@ while read line; do
 		echo "Perform mock QC analysis, etc. on "$SAMPLE
 	fi
 done < $VALID_SAMPLE_FILE
+
+############################################################
+# GSEA:
+
+#create the GSEA directory:
+GSEA_OUTPUT_DIR=$REPORT_DIR'/'$GSEA_OUTPUT_DIR
+mkdir $GSEA_OUTPUT_DIR
+export GSEA_OUTPUT_DIR
+
+#create the formatted GSEA input files
+GSEA_CLS_FILE=$GSEA_OUTPUT_DIR'/'$GSEA_CLS_FILE
+GSEA_GCT_FILE=$GSEA_OUTPUT_DIR'/'$GSEA_GCT_FILE
+
+Rscript $CREATE_GSEA_CLS_SCRIPT $VALID_SAMPLE_FILE $GSEA_CLS_FILE
+Rscript $CREATE_GSEA_GCT_SCRIPT $NORMALIZED_COUNTS_FILE $VALID_SAMPLE_FILE $GSEA_GCT_FILE
+
+
+if [ -e "$CONTRAST_FILE" ]; then
+        while read contrast; do
+                conditionA=$(echo $contrast | awk '{print $1}')
+                conditionB=$(echo $contrast | awk '{print $2}')
+
+                if [ $TEST -eq $NUM0 ]; then
+			$RUN_GSEA_SCRIPT \
+				$GSEA_JAR \
+				$GSEA_ANALYSIS \
+				$GSEA_GCT_FILE \
+				$GSEA_CLS_FILE \
+				$conditionA'_versus_'$conditionB \
+				$DEFAULT_GMX_FILE \
+				$NUM_GSEA_PERMUTATIONS \
+				$conditionA'_versus_'$conditionB \
+				$DEFAULT_CHIP_FILE \
+				$GSEA_OUTPUT_DIR || { echo "Error occurred in running GSEA.  Exiting."; exit 1; }
+                else
+                    	echo "Perform mock GSEA step on contrast between "$conditionA "and" $conditionB
+                fi
+        done < $CONTRAST_FILE
+else
+    	echo "Skipping GSEA analysis since no contrast file was specified."
+fi
+
+
+
+############################################################
 
 
 #Report creation:

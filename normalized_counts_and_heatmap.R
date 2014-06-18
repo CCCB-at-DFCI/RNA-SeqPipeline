@@ -2,14 +2,12 @@
 if(!require("DESeq", character.only=T)) stop("Please install the DESeq package first.")
 
 #get args from the commandline:
-# 1: full path to the output directory
-# 2: full path to the design matrix file
-# 3: name for the file we will write to that will contain the normalized counts 
+# 1: full path to the design matrix file
+# 2: path for the file where we will write the normalized counts 
 
 args<-commandArgs(TRUE)
-OUTPUT_DIR<-args[1]
-DESIGN_MTX_FILE<-args[2]
-NORMALIZED_COUNTS_FILE<-args[3]
+DESIGN_MTX_FILE<-args[1]
+NORMALIZED_COUNTS_FILE<-args[2]
 
 # DESIGN_MTX_FILE is created by a python script and has the following columns:
 # 1: sample
@@ -56,5 +54,4 @@ cds=estimateSizeFactors(cds)
 
 #write out the normalized counts:
 nc<-counts( cds, normalized=TRUE )
-result_file<-paste(OUTPUT_DIR, NORMALIZED_COUNTS_FILE, sep='/')
-write.csv(as.data.frame(nc), file=result_file, row.names=TRUE)
+write.csv(as.data.frame(nc), file=NORMALIZED_COUNTS_FILE, row.names=TRUE)

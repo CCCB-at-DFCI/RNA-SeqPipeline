@@ -9,11 +9,20 @@
   }
 }
 
+.padded-link{
+	margin-left:10px;
+}
+
 .content-panel{
 	display:none;
 }
 
 .qc_report_iframe{
+	width: 100%;
+	height: 500px;
+}
+
+.gsea_report_iframe{
 	width: 100%;
 	height: 500px;
 }
