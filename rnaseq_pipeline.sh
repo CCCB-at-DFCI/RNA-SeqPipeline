@@ -45,11 +45,11 @@ function usage
 	echo "usage: 
 		-d | --dir sample_directory 
 		-s | --samples samples_file 
+		-g | --genome
 		-c | --contrasts contrast_file (optional) 
 		-config (optional, configuration file-- if not given, use default)
                 -noalign (optional, default behavior is to align) 
                 -paired (optional, default= single-end) 
-		-g | --genome (optional, default is hg19)
 		-a | --aligner (optional, default is STAR)
 		-test (optional, for simple test)"
 	echo "**************************************************************************************************"
