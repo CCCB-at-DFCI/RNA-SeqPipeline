@@ -234,6 +234,6 @@ if __name__ == "__main__":
 
         write_completed_template(completed_html_report, html)
 
-    else:
+    except KeyError:
         print "Error in creating HTML report.  Check the input args"
         sys.exit(1)
