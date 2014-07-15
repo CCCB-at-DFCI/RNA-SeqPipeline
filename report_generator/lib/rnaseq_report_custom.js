@@ -7,6 +7,10 @@ $(document).ready(function() {
 		var target = $(this).attr("id");
 		$('#'+target.replace(panel, view)).slideToggle();
 	});
+	$('.view_close').click(function(){
+		var parent_panel = $(this).parents(".content-panel");
+		parent_panel.slideToggle();
+	});
 });
 
 
