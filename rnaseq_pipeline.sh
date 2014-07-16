@@ -198,7 +198,7 @@ fi
 
 #if no configuration file was given, then use teh default one
 if [ "$CONFIG" == "" ]; then
-    CONFIG=/cccbstore-rc/projects/cccb/pipelines/RNA_Seq_pipeline/config.txt
+    CONFIG=/cccbstore-rc/projects/cccb/pipelines/RNA-SeqPipeline/config.txt
     # double check that the configuration file exists:
     if [[ ! -f "$CONFIG" ]]; then
         echo "Could not locate a configuration file at "$CONFIG
