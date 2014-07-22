@@ -138,21 +138,23 @@ def inject_gsea_reports(output_report_dir, template_html, gsea_dir, gsea_default
 
         #get all the reports contained in the gsea directory:
         all_reports = glob.glob(os.path.join(gsea_dir, '*', gsea_default_html))
-
-        for report in all_reports:
-            #to the report relative to the output report directory
-            relative_path = os.path.relpath(report, output_report_dir)
+        if len(all_reports)>0:
+            for report in all_reports:
+                #to the report relative to the output report directory
+                relative_path = os.path.relpath(report, output_report_dir)
         
-            #get the name of the contrast by parsing the report's parent directory
-            parent_dir_name = os.path.basename(os.path.dirname(report))
-            contrast_id = parent_dir_name.split('.')[0]
+                #get the name of the contrast by parsing the report's parent directory
+                parent_dir_name = os.path.basename(os.path.dirname(report))
+                contrast_id = parent_dir_name.split('.')[0]
 
-            s = match
-            s = re.sub(CONTRAST_ID, contrast_id, s)
-            s = re.sub(REPORT_LINK, relative_path, s)
+                s = match
+                s = re.sub(CONTRAST_ID, contrast_id, s)
+                s = re.sub(REPORT_LINK, relative_path, s)
 
-            content = re.findall(DIV_REGEX, s, flags=re.DOTALL)
-            new_content += content[0]
+                content = re.findall(DIV_REGEX, s, flags=re.DOTALL)
+                new_content += content[0]
+        else:
+            new_content='<div class="alert alert-info">GSEA was not performed.</div>'
 
         template_html = re.sub(pattern, new_content, template_html, flags=re.DOTALL)
     return template_html
@@ -164,13 +166,17 @@ def inject_heatmaps(template_html, deseq_result_dir, all_heatmap_files, heatmap_
     match = extract_template_textblock(pattern, template_html)
     if match:
         new_content = ""
-        for heatmap in all_heatmap_files:
-            f = os.path.basename(heatmap).rstrip(heatmap_file_tag) #get the 'name' of the contrast performed
-            s = match
-            s = re.sub(CONTRAST_ID, f, s)
-            s = re.sub(HEATMAP_LOCATION, os.path.join(deseq_result_dir, os.path.basename(heatmap)), s)
-            content = re.findall(DIV_REGEX, s, flags=re.DOTALL)
-            new_content += content[0]
+        if len(all_heatmap_files)>0:
+            for heatmap in all_heatmap_files:
+                f = os.path.basename(heatmap).rstrip(heatmap_file_tag) #get the 'name' of the contrast performed
+                s = match
+                s = re.sub(CONTRAST_ID, f, s)
+                s = re.sub(HEATMAP_LOCATION, os.path.join(deseq_result_dir, os.path.basename(heatmap)), s)
+                content = re.findall(DIV_REGEX, s, flags=re.DOTALL)
+                new_content += content[0]
+        else:
+            new_content='<div class="alert alert-info">Differential analysis was not performed- no heatmaps to display.</div>'
+
         template_html = re.sub(pattern, new_content, template_html, flags=re.DOTALL)
     return template_html
 
