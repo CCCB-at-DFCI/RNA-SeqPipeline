@@ -118,7 +118,8 @@ def parse_seq_info(samplesheet):
             values = f.readline().strip().split(',')
             return dict(zip(keys, values))
     except IOError:
-        sys.exit("Could not locate the sample sheet at: "+str(samplesheet))
+        print "(Warning) Could not locate the sample sheet at: "+str(samplesheet)
+        return None
 
 
 def prepare_sample(sample):
