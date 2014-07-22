@@ -37,7 +37,6 @@ if ! which $PYTHON ; then
 	exit 1
 fi
 
-
 #  a function that prints the proper usage syntax
 function usage
 {
@@ -304,6 +303,10 @@ echo ""
 echo ""
 
 ############################################################
+
+
+#check for R dependencies before continuing:
+Rscript $R_DEPENDENCY_CHECK_SCRIPT || { echo "The proper R dependencies were not installed or could not be installed.  Exiting."; exit 1; }
 
 
 ############################################################

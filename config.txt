@@ -21,6 +21,7 @@ CHECK_BAM_SCRIPT=$PIPELINE_HOME'/check_for_bam.py'
 CREATE_DESIGN_MATRIX_SCRIPT=$PIPELINE_HOME'/create_design_matrix.py'
 CREATE_REPORT_SCRIPT=$REPORT_TEMPLATE_DIR'/create_report.py'
 PROCESS_COUNT_FILE_SCRIPT=$PIPELINE_HOME'/process_count_files.R'
+R_DEPENDENCY_CHECK_SCRIPT=$PIPELINE_HOME'/check_R_dependencies.R'
 
 # R script for calling DESeq and performing the differential expression analysis:
 DESEQ_SCRIPT=$PIPELINE_HOME"/deseq_original.R"
