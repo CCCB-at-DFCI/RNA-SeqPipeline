@@ -235,7 +235,7 @@ export ALIGNER
 #identify the correct genome files to use
 if [[ "$ASSEMBLY" == hg19 ]]; then
     GTF=/cccbstore-rc/projects/db/genomes/Human/GRCh37.75/GTF/Homo_sapiens.GRCh37.75.gtf
-    GENOMEFASTA=/cccbstore-rc/projects/db/genomes/Human/GRCh37.75/Homo_sapiens.GRCh37.75.dna.primary_assembly.fa
+    GENOMEFASTA=/cccbstore-rc/projects/db/genomes/Human/GRCh37.75/Homo_sapiens.GRCh37.75.dna.primary_assembly.reordered.fa
     SNAPR_GENOME_INDEX=/cccbstore-rc/projects/db/genomes/Human/GRCh37.75/SNAPR/index-dir
     SNAPR_TRANSCRIPTOME_INDEX=/cccbstore-rc/projects/db/genomes/Human/GRCh37.75/SNAPR/transcriptome-dir
     STAR_GENOME_INDEX=/cccbstore-rc/projects/db/genomes/Human/GRCh37.75/STAR_INDEX  
@@ -367,6 +367,7 @@ else
    
     #since we did not align here using STAR, etc., change the ALN_DIR_NAME to something generic:
     ALN_DIR_NAME="bam_file"
+    export ALN_DIR_NAME
 
     #given bam files contained anywhere in PROJECT_HOME, construct the assumed project
     #hierarchy and create symbolic links to the bam files
