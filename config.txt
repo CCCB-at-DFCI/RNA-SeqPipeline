@@ -138,6 +138,12 @@ SAMPLE_SHEET_NAME='SampleSheet.csv'
 # Depending on the process producing the project directories + FASTQ files, this could change.
 SAMPLE_DIR_PREFIX="Sample_"
 
+# for help in finding the FASTQ files:
+READ_1_FASTQ_TAG=R1
+READ_2_FASTQ_TAG=R2
+FASTQ_SUFFIX=fastq.gz
+
+
 # a file suffix/extension for identifying the alignment scripts that are generated on-the-fly by a python script
 FORMATTED_ALIGN_SCRIPT_NAMETAG="_aln.sh"
 

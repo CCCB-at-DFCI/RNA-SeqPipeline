@@ -132,8 +132,18 @@ def prepare_sample(sample):
 
     #locate the fastq files (if not found, they are set to None)
     search_pattern = os.path.join(sample.sample_dir, sample.sample_name)
-    sample.fastq_a = find(search_pattern+"*R1*fastq.gz")
-    sample.fastq_b = find(search_pattern+"*R2*fastq.gz")
+    try:
+        read_1_fastq_tag = os.environ['READ_1_FASTQ_TAG']
+        read_2_fastq_tag = os.environ['READ_2_FASTQ_TAG']
+        fastq_suffix = os.environ['FASTQ_SUFFIX']
+    except KeyError:
+        #default values in case the configuration files did not export the variables to the shell environment
+        read_1_fastq_tag = "R1"
+        read_2_fastq_tag = "R2"
+        fastq_suffix = "fastq.gz"
+        
+    sample.fastq_a = find(search_pattern+"*"+str(read_1_fastq_tag)+"*"+str(fastq_suffix))
+    sample.fastq_b = find(search_pattern+"*"+str(read_2_fastq_tag)+"*"+str(fastq_suffix))
 
     #extract sample metadata (for read group info) from the samplesheet:
     

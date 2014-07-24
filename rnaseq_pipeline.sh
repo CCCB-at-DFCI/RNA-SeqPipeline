@@ -1,16 +1,8 @@
 #!/bin/bash
 
-echo "
- #==========================================================================#
- #     ______________________     ____  _   _____        _____              #
- #    / ____/ ____/ ____/ __ )   / __ \/ | / /   |	/ ___/___  ____     #
- #   / /   / /   / /   / __  |  / /_/ /  |/ / /| |______\__ \/ _ \/ __ \    #
- #  / /___/ /___/ /___/ /_/ /  / _, _/ /|  / ___ /_____/__/ /  __/ /_/ /    #
- #  \____/\____/\____/_____/  /_/ |_/_/ |_/_/  |_|    /____/\___/\__, /     #
- #                                                                 /_/      #
- #                                                                          #
- #==========================================================================#
-"
+
+#default logging file:
+LOGFILE=log.txt
 
 ##########################################################
 
@@ -42,14 +34,15 @@ function usage
 {
 	echo "**************************************************************************************************"
 	echo "usage: 
-		-d | --dir sample_directory 
-		-s | --samples samples_file 
-		-g | --genome
-		-c | --contrasts contrast_file (optional) 
-		-config (optional, configuration file-- if not given, use default)
+		-d | --dir <path to sample directory> 
+		-s | --samples <path to samples_file> 
+		-g | --genome <hg19 | mm10>
+		-o | --output <path to output directory>
+		-c | --contrasts <contrast_file> (optional) 
+		-config <path to configuration file> (optional, configuration file-- if not given, use default)
                 -noalign (optional, default behavior is to align) 
                 -paired (optional, default= single-end) 
-		-a | --aligner (optional, default is STAR)
+		-a | --aligner <STAR | SNAPR> (optional, default is STAR)
 		-test (optional, for simple test)"
 	echo "**************************************************************************************************"
 }
@@ -109,6 +102,10 @@ while [ "$1" != "" ]; do
 			shift
 			ASSEMBLY=$1
 			;;
+		-o | --output )
+			shift
+			TARGET_DIR=$1
+			;;
 		-s | --samples )
 			shift
 			SAMPLES_FILE=$1
@@ -155,6 +152,13 @@ if [ "$PROJECT_DIR" == "" ]; then
     exit 1
 fi
 
+if [ "$TARGET_DIR" == "" ]; then
+    echo ""
+    echo "ERROR: Missing the target directory (where the final analysis will be placed).  Please try again."
+    usage
+    exit 1
+fi
+
 if [ "$SAMPLES_FILE" == "" ]; then
     echo ""
     echo "ERROR: Missing the samples file.  Please try again."
@@ -195,7 +199,7 @@ if [ "$ALIGNER" == "" ]; then
 fi
 
 
-#if no configuration file was given, then use teh default one
+#if no configuration file was given, then use the default one
 if [ "$CONFIG" == "" ]; then
     CONFIG=/cccbstore-rc/projects/cccb/pipelines/RNA-SeqPipeline/config.txt
     # double check that the configuration file exists:
@@ -281,7 +285,26 @@ export TRANSCRIPTOME_INDEX
 
 ############################################################
 
-#print out the parameters for logging:
+#begin logging:
+
+#create the target directory where the logfile (and analysis) will be placed
+mkdir $TARGET_DIR || { echo "Could not create your target directory.  Try again. Exiting. "; exit 1; }
+
+
+#open brace for "logging block"-- everything inside the braces is tee'd into the logfile
+{
+
+echo "
+ #==========================================================================#
+ #     ______________________     ____  _   _____        _____              #
+ #    / ____/ ____/ ____/ __ )   / __ \/ | / /   |	/ ___/___  ____     #
+ #   / /   / /   / /   / __  |  / /_/ /  |/ / /| |______\__ \/ _ \/ __ \    #
+ #  / /___/ /___/ /___/ /_/ /  / _, _/ /|  / ___ /_____/__/ /  __/ /_/ /    #
+ #  \____/\____/\____/_____/  /_/ |_/_/ |_/_/  |_|    /____/\___/\__, /     #
+ #                                                                 /_/      #
+ #                                                                          #
+ #==========================================================================#
+"
 
 echo ""
 echo "Will attempt to perform analysis on samples (from "$SAMPLES_FILE"):"
@@ -584,10 +607,15 @@ else
 fi
 ############################################################
 
+#move everything to the target directory:
 
-############################################################
-#cleanup
+# create the same directory structure as the PROJECT_DIR
+find $PROJECT_DIR -type d -not -path "$PROJECT_DIR" | sed -e "s:$PROJECT_DIR:$TARGET_DIR:g" | xargs -t -i mkdir {}
 
-#rm $VALID_SAMPLE_FILE
+# move all the files (EXCEPT FASTQ) into the target directory:
+find $PROJECT_DIR -type f | grep -Pv ".*$FASTQ_SUFFIX" | sed -e "s:.*:'&':;p;s:$PROJECT_DIR:$TARGET_DIR:g" | xargs -t -n2 mv
+
+#close the logging block
+} | tee $TARGET_DIR/$LOGFILE
 
 
