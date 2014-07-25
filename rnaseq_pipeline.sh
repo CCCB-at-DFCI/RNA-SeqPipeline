@@ -319,7 +319,7 @@ fi
 echo ""
 echo "Project home directory: "$PROJECT_DIR
 if [ $ALN -eq $NUM1 ]; then
-	echo "Perform alignment with "$ALIGNER
+	echo "Perform alignment with $ALIGNER"
 	echo "Alignment will be performed against: "$ASSEMBLY
 fi
 echo ""
@@ -350,9 +350,12 @@ if [ $ALN -eq $NUM1 ]; then
 
     for sample in $( cut -f1 $VALID_SAMPLE_FILE ); do
 		FLAG=0
+		ATTEMPTS=0
+		#while loop attempts to submit/wait the same job if there happens to be another star/snapr process running
 		while [ $FLAG -eq 0 ]; do
 			#check if other SNAPR or STAR processes are running first:
 			if [ "$(pgrep $SNAPR_PROCESS)" == "" ] && [ "$(pgrep $STAR)" == "" ]; then
+				echo ""
 			        echo "Run alignment with script at: "
 				echo $PROJECT_DIR'/'$SAMPLE_DIR_PREFIX$sample'/'$sample$FORMATTED_ALIGN_SCRIPT_NAMETAG   
 				date
@@ -369,9 +372,9 @@ if [ $ALN -eq $NUM1 ]; then
 				fi
 				echo "Alignment on sample $sample completed at: "
 				date
-				FLAG=1
+				FLAG=1 #to break out of while loop
 			else
-				if [ $ATTEMPTS < $MAX_ALIGN_ATTEMPTS ]; then
+				if [ $ATTEMPTS -le $MAX_ALIGN_ATTEMPTS ]; then
 					echo "Another snapr or star process is running.  Will sleep for $SLEEP_TIME seconds and try again. (Max attempts=$MAX_ALIGN_ATTEMPTS)"
 					sleep $SLEEP_TIME
 					let ATTEMPTS+=1
@@ -493,6 +496,18 @@ mkdir $REPORT_DIR
 ############################################################
 #get the normalized counts via DESEQ:
 
+
+echo "
+###########################################################################################
+#                                                                                         #  
+#                                                                                         #  
+#                                 DESEQ SECTION                                           #  
+#                                                                                         #  
+#                                                                                         #  
+###########################################################################################
+"
+
+
 #first create an output directory for the deseq scripts that will be run:
 DESEQ_RESULT_DIR=$REPORT_DIR'/'$DESEQ_RESULT_DIR
 mkdir $DESEQ_RESULT_DIR
@@ -528,6 +543,17 @@ fi
 ############################################################
 #Report creation:
 
+echo "
+###########################################################################################
+#                                                                                         #  
+#                                                                                         #  
+#                                 RNA-SEQC SECTION                                        #  
+#                                                                                         #  
+#                                                                                         #  
+###########################################################################################
+"
+
+
 #create the reports with RNA-seQC:
 while read line; do
  	SAMPLE=$(echo $line | awk '{print $1}')
@@ -550,6 +576,18 @@ done < $VALID_SAMPLE_FILE
 
 ############################################################
 # GSEA:
+
+
+echo "
+###########################################################################################
+#                                                                                         #  
+#                                                                                         #  
+#                                 GSEA SECTION                                            #  
+#                                                                                         #  
+#                                                                                         #  
+###########################################################################################
+"
+
 
 #create the GSEA directory:
 GSEA_OUTPUT_DIR=$REPORT_DIR'/'$GSEA_OUTPUT_DIR
@@ -596,6 +634,17 @@ fi
 
 #Report creation:
 
+echo "
+###########################################################################################
+#                                                                                         #  
+#                                                                                         #  
+#                                 REPORT SECTION                                          #  
+#                                                                                         #  
+#                                                                                         #  
+###########################################################################################
+"
+
+
 #copy the necessary libraries to go with the html report:
 cp -r $REPORT_TEMPLATE_LIBRARIES $REPORT_DIR
 
@@ -607,6 +656,16 @@ else
 fi
 ############################################################
 
+echo "
+###########################################################################################
+#                                                                                         #  
+#                                                                                         #  
+#                                REPORT SECTION                                           #  
+#                                                                                         #  
+#                                                                                         #  
+###########################################################################################
+"
+
 #move everything to the target directory:
 
 # create the same directory structure as the PROJECT_DIR
@@ -617,5 +676,6 @@ find $PROJECT_DIR -type f | grep -Pv ".*$FASTQ_SUFFIX" | sed -e "s:.*:'&':;p;s:$
 
 #close the logging block
 } | tee $TARGET_DIR/$LOGFILE
+
 
 
