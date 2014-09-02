@@ -23,6 +23,9 @@ CREATE_REPORT_SCRIPT=$REPORT_TEMPLATE_DIR'/create_report.py'
 PROCESS_COUNT_FILE_SCRIPT=$PIPELINE_HOME'/process_count_files.R'
 R_DEPENDENCY_CHECK_SCRIPT=$PIPELINE_HOME'/check_R_dependencies.R'
 
+#for marking duplicates- need location of picard tools:
+PICARD_LOCATION=/cccbstore-rc/projects/cccb/apps/picard-tools_current
+
 # R script for calling DESeq and performing the differential expression analysis:
 DESEQ_SCRIPT=$PIPELINE_HOME"/deseq_original.R"
 
@@ -132,6 +135,8 @@ GSEA_DEFAULT_HTML=index.html
 #####################################################################################################
 #some other configuration parameters-- most are "arbitrary" and can be left as-is.
 
+VARIABLES="env.variables"
+
 #the name (not path) of	the sample sheet (containing sequencing	metadata) located in the sample-specific directories:
 SAMPLE_SHEET_NAME='SampleSheet.csv'
 
@@ -149,6 +154,9 @@ FASTQ_SUFFIX=fastq.gz
 FORMATTED_ALIGN_SCRIPT_NAMETAG="_aln.sh"
 
 # the desired output extension for the sorted bam files
+SORTED_DEDUPED_PRIMARY_BAM=.sort.dedup.primary.bam
+SORTED_PRIMARY_BAM=.sort.primary.bam
+
 SORTED_TAG=".sorted"
 BAM_EXTENSION=".bam"
 

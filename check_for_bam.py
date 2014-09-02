@@ -42,7 +42,7 @@ if __name__=="__main__":
     project_dir = os.environ['PROJECT_DIR']
     sample_dir_prefix = os.environ['SAMPLE_DIR_PREFIX']
     align_dir_name = os.environ['ALN_DIR_NAME']
-    bam_suffix = str(os.environ['SORTED_TAG'])+str(os.environ['BAM_EXTENSION'])
+    bam_suffix = str(os.environ['FINAL_BAM_SUFFIX'])
     
     main(valid_sample_file, project_dir, sample_dir_prefix, align_dir_name, bam_suffix)
 

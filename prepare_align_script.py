@@ -30,7 +30,8 @@ class SampleMetaData:
                  transcriptome_index,
                  bam_suffix,
                  samplesheet,
-                 aligner):
+                 aligner,
+                 dedup):
         self.project_dir = project_dir
         self.output_dir = output_dir
         self.paired_end_reads = paired_end_reads
@@ -43,6 +44,7 @@ class SampleMetaData:
         self.bam_suffix = bam_suffix
         self.samplesheet = samplesheet
         self.aligner = aligner
+        self.dedup = dedup
 
 
 class Sample:
@@ -176,6 +178,11 @@ def inject_script(sample):
         sample.script_template = re.sub("%FASTQFILEA%", str(sample.fastq_a), str(sample.script_template))
         sample.script_template = re.sub("%FASTQFILEB%", "", str(sample.script_template))
 
+    if sample.sample_metadata.dedup == 1:
+        sample.script_template = re.sub("%DEDUP%", str(1), str(sample.script_template))
+    else:
+        sample.script_template = re.sub("%DEDUP%", str(0), str(sample.script_template))
+
     #aligner specifics:
     if aligner.lower() == SNAPR.lower():
       sample.script_template = re.sub("%TRANSCRIPTOME_INDEX%", str(sample.sample_metadata.transcriptome_index), str(sample.script_template))
@@ -189,7 +196,7 @@ def inject_script(sample):
             fcid = sample.sequencing_info_dict["FCID"]
             lane = sample.sequencing_info_dict["Lane"]
             index = sample.sequencing_info_dict["Index"]
-        except KeyError:
+        except (TypeError, KeyError) as e:
             pass
 
         sample.script_template = re.sub("%FCID%", str(fcid), str(sample.script_template))
@@ -229,6 +236,7 @@ if __name__ == '__main__':
     gtf_file: a full path to a gtf file for this genome
     genome_index: is a full path to the genome index for the aligner
     bam_suffix: is a file suffix to place on the output BAM file so that it may be easily identified later on in the pipeline
+    dedup: specifies if we should dedup (1) or not (0)
     """
 
     try:
@@ -243,9 +251,10 @@ if __name__ == '__main__':
         script_nametag = os.environ['FORMATTED_ALIGN_SCRIPT_NAMETAG']
         sample_dir_prefix = os.environ['SAMPLE_DIR_PREFIX']
         genome_index = os.environ['GENOME_INDEX']
-        bam_suffix = str(os.environ['SORTED_TAG'])+str(os.environ['BAM_EXTENSION'])
+        bam_suffix = str(os.environ['FINAL_BAM_SUFFIX'])
         gtf_file = os.environ['GTF']
         aligner = os.environ['ALIGNER']
+        dedup = int(os.environ['DEDUP'])
 
         if aligner.lower() == SNAPR.lower():
             try:
@@ -269,7 +278,8 @@ if __name__ == '__main__':
             transcriptome_index,
             bam_suffix,
             samplesheet,
-            aligner
+            aligner,
+            dedup
         )
 
         #get a list of tuples for samples/conditions from the sample file:

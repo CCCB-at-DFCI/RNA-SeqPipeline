@@ -42,6 +42,7 @@ function usage
 		-config <path to configuration file> (optional, configuration file-- if not given, use default)
                 -noalign (optional, default behavior is to align) 
                 -paired (optional, default= single-end) 
+		-no_dedup (optional, default will dedup the BAM files.  Final result is a sorted, primary BAM file)
 		-a | --aligner <STAR | SNAPR> (optional, default is STAR)
 		-test (optional, for simple test)"
 	echo "**************************************************************************************************"
@@ -120,6 +121,9 @@ while [ "$1" != "" ]; do
 			;;
 		-noalign )
 			ALN=0
+			;;
+		-no_dedup )
+			DEDUP=0
 			;;
 		-paired )
 			PAIRED_READS=1
@@ -234,6 +238,17 @@ export SAMPLES_FILE
 export PAIRED_READS
 export ALIGNER
 
+# if DEDUP was not set to zero (using the -no_dedup flag), then set it to 1 for true
+if [ "$DEDUP" == "" ]; then
+    DEDUP=1
+    FINAL_BAM_SUFFIX=$SORTED_DEDUPED_PRIMARY_BAM
+else
+    FINAL_BAM_SUFFIX=$SORTED_PRIMARY_BAM
+fi
+export DEDUP
+export FINAL_BAM_SUFFIX
+
+
 #############################################################
 
 #identify the correct genome files to use
@@ -288,7 +303,7 @@ export TRANSCRIPTOME_INDEX
 #begin logging:
 
 #create the target directory where the logfile (and analysis) will be placed
-mkdir $TARGET_DIR || { echo "Could not create your target directory.  Try again. Exiting. "; exit 1; }
+mkdir $TARGET_DIR || { echo "Could not create your target directory (does it already exist? Do you have the proper permissions?).  Try again. Exiting. "; exit 1; }
 
 
 #open brace for "logging block"-- everything inside the braces is tee'd into the logfile
@@ -329,7 +344,7 @@ echo ""
 
 
 #check for R dependencies before continuing:
-Rscript $R_DEPENDENCY_CHECK_SCRIPT || { echo "The proper R dependencies were not installed or could not be installed.  Exiting."; exit 1; }
+Rscript $R_DEPENDENCY_CHECK_SCRIPT || { echo "The proper R dependencies were not installed or could not be installed.  Check $R_DEPENDENCY_CHECK_SCRIPT to see which packages should be installed in your R instance.  Exiting."; exit 1; }
 
 
 ############################################################
@@ -341,6 +356,7 @@ if [ $ALN -eq $NUM1 ]; then
     #call a python script that scans the sample directory, checks for the correct files,
     # and injects the proper parameters into the alignment shell script
     $PYTHON $PREPARE_ALIGN_SCRIPT || { echo "Something went wrong in preparing the alignment scripts.  Exiting"; exit 1; }
+
 
     echo "After examining project structure, will attempt to align on the following samples:"
     print_sample_report $VALID_SAMPLE_FILE
@@ -355,20 +371,22 @@ if [ $ALN -eq $NUM1 ]; then
 		while [ $FLAG -eq 0 ]; do
 			#check if other SNAPR or STAR processes are running first:
 			if [ "$(pgrep $SNAPR_PROCESS)" == "" ] && [ "$(pgrep $STAR)" == "" ]; then
+				ALN_SCRIPT=$PROJECT_DIR'/'$SAMPLE_DIR_PREFIX$sample'/'$sample$FORMATTED_ALIGN_SCRIPT_NAMETAG
 				echo ""
 			        echo "Run alignment with script at: "
-				echo $PROJECT_DIR'/'$SAMPLE_DIR_PREFIX$sample'/'$sample$FORMATTED_ALIGN_SCRIPT_NAMETAG   
+				echo $ALN_SCRIPT 
 				date
 				echo ""
-                                chmod a+x $PROJECT_DIR'/'$SAMPLE_DIR_PREFIX$sample'/'$sample$FORMATTED_ALIGN_SCRIPT_NAMETAG
+                                chmod a+x $ALN_SCRIPT
+				sed -i "s?%PICARD_DIR%?$PICARD_LOCATION?g" $ALN_SCRIPT
 				
 				#kickoff the script and wait until completion:
 			        if [ $TEST -eq $NUM0 ]; then
-					$PROJECT_DIR'/'$SAMPLE_DIR_PREFIX$sample'/'$sample$FORMATTED_ALIGN_SCRIPT_NAMETAG                
+					$ALN_SCRIPT                
 				else
 					echo "...[Mock alignment]..."
 					mkdir $PROJECT_DIR'/'$SAMPLE_DIR_PREFIX$sample'/'$ALN_DIR_NAME
-					touch $PROJECT_DIR'/'$SAMPLE_DIR_PREFIX$sample'/'$ALN_DIR_NAME'/'$sample$SORTED_TAG$BAM_EXTENSION
+					touch $PROJECT_DIR'/'$SAMPLE_DIR_PREFIX$sample'/'$ALN_DIR_NAME'/'$sample$FINAL_BAM_SUFFIX
 				fi
 				echo "Alignment on sample $sample completed at: "
 				date
@@ -402,12 +420,19 @@ else
     	SAMPLE=$(echo $line | awk '{print $1}')
 
 	#the name of the link (in our convention) which will link to the original bam file
-	BASE_BAM_FILE=$SAMPLE$SORTED_TAG$BAM_EXTENSION
-	BAM_FILE=$(find -L $PROJECT_DIR -type f -name $SAMPLE*$BAM_EXTENSION)
-	if [ "$BAM_FILE" != "" ]; then
+	BASE_BAM_FILE=$SAMPLE$FINAL_BAM_SUFFIX
+	
+	#find bam files that begin with the sample name and end with the proper extension.  There may be >1, so we have to watch for that.
+	ALL_BAM_FILES=( $( find -L $PROJECT_DIR -type f -name $SAMPLE*$BAM_EXTENSION | xargs ls -t) ) #an array!  sorted by time
+
+        #take the LAST modified BAM file:
+        LATEST_BAM_FILE=${ALL_BAM_FILES[0]}
+
+	if [ "$LATEST_BAM_FILE" != "" ]; then
+		echo "Most recent BAM file for $SAMPLE: $LATEST_BAM_FILE"
 		SAMPLE_ALN_DIR=$PROJECT_DIR'/'$SAMPLE_DIR_PREFIX$SAMPLE'/'$ALN_DIR_NAME
 		mkdir -p $SAMPLE_ALN_DIR
-		ln -s $BAM_FILE $SAMPLE_ALN_DIR'/'$BASE_BAM_FILE
+		ln -s $LATEST_BAM_FILE $SAMPLE_ALN_DIR'/'$BASE_BAM_FILE
 #		echo $line >> $VALID_SAMPLE_FILE
 		printf "%s\t%s\n" $(echo $SAMPLE) $(echo $line | awk '{print $2}') >> $VALID_SAMPLE_FILE
 	else
@@ -424,7 +449,7 @@ fi
 ############################################################
 
 # check for the appropriate bam files and update the valid sample file accordingly:
-$PYTHON $CHECK_BAM_SCRIPT || { echo "Error.  Exiting"; exit 1; }
+$PYTHON $CHECK_BAM_SCRIPT || { ( set -o posix ; set ) >>$PROJECT_DIR/$VARIABLES; echo "Error when checking for BAM files, prior to read counting.  Exiting"; exit 1; }
 
 ############################################################
 
@@ -453,7 +478,7 @@ if [ $TEST -eq $NUM0 ]; then
     		    featureCounts -a $GTF \
 				  -o $COUNT_FILE$TMP \
 				  -t exon \
-				  -g gene_name $PROJECT_DIR"/"$SAMPLE_DIR_PREFIX$sample"/"$ALN_DIR_NAME"/"$sample$SORTED_TAG$BAM_EXTENSION
+				  -g gene_name $PROJECT_DIR"/"$SAMPLE_DIR_PREFIX$sample"/"$ALN_DIR_NAME"/"$sample$FINAL_BAM_SUFFIX
 
 		    Rscript \
 			$PROCESS_COUNT_FILE_SCRIPT \
@@ -478,7 +503,7 @@ else
 fi
 
 #with the count files moved, create a design matrix for DESeq:
-$PYTHON $CREATE_DESIGN_MATRIX_SCRIPT || { echo "Failed in creating design matrix.  Exiting"; exit 1; }
+$PYTHON $CREATE_DESIGN_MATRIX_SCRIPT || { ( set -o posix ; set ) >>$PROJECT_DIR/$VARIABLES; echo "Failed in creating design matrix.  Exiting"; exit 1; }
 
 ############################################################
 
@@ -488,7 +513,6 @@ $PYTHON $CREATE_DESIGN_MATRIX_SCRIPT || { echo "Failed in creating design matrix
 #create a report directory to hold the report and the output analysis:
 REPORT_DIR=$PROJECT_DIR'/'$REPORT_DIR
 mkdir $REPORT_DIR
-
 ############################################################
 
 
@@ -529,7 +553,7 @@ if [ -e "$CONTRAST_FILE" ]; then
 
     		if [ $TEST -eq $NUM0 ]; then
     			echo Rscript $DESEQ_SCRIPT $DESEQ_RESULT_DIR $DESIGN_MTX_FILE $DESEQ_OUTFILE_TAG $conditionA $conditionB $HEATMAP_FILE $HEATMAP_GENE_COUNT
-    			Rscript $DESEQ_SCRIPT $DESEQ_RESULT_DIR $DESIGN_MTX_FILE $DESEQ_OUTFILE_TAG $conditionA $conditionB $HEATMAP_FILE $HEATMAP_GENE_COUNT
+    			Rscript $DESEQ_SCRIPT $DESEQ_RESULT_DIR $DESIGN_MTX_FILE $DESEQ_OUTFILE_TAG $conditionA $conditionB $HEATMAP_FILE $HEATMAP_GENE_COUNT || { ( set -o posix ; set ) >>$PROJECT_DIR/$VARIABLES; echo "Error during DESeq script.  Exiting"; exit 1; }
 		else
 			echo "Perform mock DESeq step on contrast between "$conditionA "and" $conditionB
     		fi
@@ -557,7 +581,7 @@ echo "
 #create the reports with RNA-seQC:
 while read line; do
  	SAMPLE=$(echo $line | awk '{print $1}')
-	SAMPLE_BAM=$PROJECT_DIR'/'$SAMPLE_DIR_PREFIX$SAMPLE'/'$ALN_DIR_NAME'/'$SAMPLE$SORTED_TAG$BAM_EXTENSION
+	SAMPLE_BAM=$PROJECT_DIR'/'$SAMPLE_DIR_PREFIX$SAMPLE'/'$ALN_DIR_NAME'/'$SAMPLE$FINAL_BAM_SUFFIX
 
         #create output directory
         SAMPLE_QC_DIR=$REPORT_DIR'/'$RNA_SEQC_DIR'/'$SAMPLE
@@ -568,7 +592,7 @@ while read line; do
 		-o $SAMPLE_QC_DIR \
 		-r $GENOMEFASTA \
 		-s "$SAMPLE|$SAMPLE_BAM|-" \
-		-t $GTF_FOR_RNASEQC || { echo "Something failed on performing QC step.  Check the output for guidance."; }
+		-t $GTF_FOR_RNASEQC || { ( set -o posix ; set ) >>$PROJECT_DIR/$VARIABLES; echo "Something failed on performing QC step.  Check the output for guidance."; }
 	else
 		echo "Perform mock QC analysis, etc. on "$SAMPLE
 	fi
@@ -618,7 +642,7 @@ if [ -e "$CONTRAST_FILE" ]; then
 				$NUM_GSEA_PERMUTATIONS \
 				$conditionA'_versus_'$conditionB \
 				$DEFAULT_CHIP_FILE \
-				$GSEA_OUTPUT_DIR || { echo "Error occurred in running GSEA.  Exiting."; exit 1; }
+				$GSEA_OUTPUT_DIR || { ( set -o posix ; set ) >>$PROJECT_DIR/$VARIABLES; echo "Error occurred in running GSEA.  Exiting."; exit 1; }
                 else
                     	echo "Perform mock GSEA step on contrast between "$conditionA "and" $conditionB
                 fi
@@ -650,7 +674,7 @@ cp -r $REPORT_TEMPLATE_LIBRARIES $REPORT_DIR
 
 #run the injection script to create the report:
 if [ $TEST -eq $NUM0 ]; then
-	$PYTHON $CREATE_REPORT_SCRIPT
+	$PYTHON $CREATE_REPORT_SCRIPT || { ( set -o posix ; set ) >>$PROJECT_DIR/$VARIABLES; echo "Error creating the report.  Exiting. "; exit 1; }
 else
 	echo "Perform mock creation of output report."
 fi
@@ -660,7 +684,7 @@ echo "
 ###########################################################################################
 #                                                                                         #  
 #                                                                                         #  
-#                                REPORT SECTION                                           #  
+#                                Moving/cleanup SECTION                                   #  
 #                                                                                         #  
 #                                                                                         #  
 ###########################################################################################
