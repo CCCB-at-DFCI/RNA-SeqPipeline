@@ -159,6 +159,8 @@ SORTED_PRIMARY_BAM=.sort.primary.bam
 
 SORTED_TAG=".sorted"
 BAM_EXTENSION=".bam"
+BAM_IDX_EXTENSION=".bai"
+
 
 #DESeq output directory- to be placed in PROJECT_DIR
 DESEQ_RESULT_DIR="deseq_results"

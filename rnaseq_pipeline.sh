@@ -42,6 +42,7 @@ function usage
 		-config <path to configuration file> (optional, configuration file-- if not given, use default)
                 -noalign (optional, default behavior is to align) 
                 -paired (optional, default= single-end) 
+                -target <string> (optional- if the BAM files already exist and you want to select those with a particular suffix.  Default behavior is to find the newest BAM for each sample)
 		-no_dedup (optional, default will dedup the BAM files.  Final result is a sorted, primary BAM file)
 		-a | --aligner <STAR | SNAPR> (optional, default is STAR)
 		-test (optional, for simple test)"
@@ -128,6 +129,10 @@ while [ "$1" != "" ]; do
 		-paired )
 			PAIRED_READS=1
 			;;
+                -target )
+                        shift
+                        TARGET_BAM=$1
+                        ;;
 		-h | --help )
 			usage
 			exit
@@ -245,6 +250,12 @@ if [ "$DEDUP" == "" ]; then
 else
     FINAL_BAM_SUFFIX=$SORTED_PRIMARY_BAM
 fi
+
+if [ "$TARGET_BAM" == "" ]; then
+    TARGET_BAM=$BAM_EXTENSION       
+fi
+
+export TARGET_BAM
 export DEDUP
 export FINAL_BAM_SUFFIX
 
@@ -423,7 +434,7 @@ else
 	BASE_BAM_FILE=$SAMPLE$FINAL_BAM_SUFFIX
 	
 	#find bam files that begin with the sample name and end with the proper extension.  There may be >1, so we have to watch for that.
-	ALL_BAM_FILES=( $( find -L $PROJECT_DIR -type f -name $SAMPLE*$BAM_EXTENSION | xargs ls -t) ) #an array!  sorted by time
+	ALL_BAM_FILES=( $( find -L $PROJECT_DIR -type f -name $SAMPLE*$TARGET_BAM | xargs ls -t) ) #an array!  sorted by time
 
         #take the LAST modified BAM file:
         LATEST_BAM_FILE=${ALL_BAM_FILES[0]}
@@ -433,6 +444,7 @@ else
 		SAMPLE_ALN_DIR=$PROJECT_DIR'/'$SAMPLE_DIR_PREFIX$SAMPLE'/'$ALN_DIR_NAME
 		mkdir -p $SAMPLE_ALN_DIR
 		ln -s $LATEST_BAM_FILE $SAMPLE_ALN_DIR'/'$BASE_BAM_FILE
+		ln -s $LATEST_BAM_FILE$BAM_IDX_EXTENSION $SAMPLE_ALN_DIR'/'$BASE_BAM_FILE$BAM_IDX_EXTENSION
 #		echo $line >> $VALID_SAMPLE_FILE
 		printf "%s\t%s\n" $(echo $SAMPLE) $(echo $line | awk '{print $2}') >> $VALID_SAMPLE_FILE
 	else

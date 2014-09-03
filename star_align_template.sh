@@ -123,7 +123,7 @@ samtools view -bS -o $UNSORTED_BAM $UNSORTED_SAM
 samtools sort -m 2500000000 $UNSORTED_BAM $SORTED_BAM #e.g the output is named aln/X.sort.bam
 
 #create index on the raw, sorted bam:
-samtools index $SORTED_BAM.bam #note the extra .bam, which samtools added by default. the SORTED_BAM variable does not have the .bam on the end
+samtools index $SORTED_BAM.bam #note the extra .bam, which samtools sort already added by default. the SORTED_BAM variable does not have the .bam on the end
 samtools flagstat $SORTED_BAM.bam >$OUTDIR/flagstat.raw.sorted.BAM.out
 
 
@@ -137,12 +137,17 @@ else
 	CURRENT_BAM=$SORTED_BAM
 fi
 
+samtools index $CURRENT_BAM
+
 # make a new bam file with only primary alignments  (if BAM is paired end, you may still have singletons here..so no filtering for proper pairs)
 FILTERED_FILE=$CURRENT_BAM.primary.bam
 samtools view -b -F 0x0100 $CURRENT_BAM.bam > $FILTERED_FILE
 
 #rename, so that it will be properly referenced by other scripts:
-mv $FILTERED_FILE $BASE$FINAL_BAM_FILE_SUFFIX
+FINAL_BAM_PATH=$BASE$FINAL_BAM_FILE_SUFFIX
+mv $FILTERED_FILE $FINAL_BAM_PATH
+
+samtools index $FINAL_BAM_PATH
 
 #cleanup
 #remove the sorted SAM (w/ read groups added), the original SAM produced by STAR, and the unsorted bam
