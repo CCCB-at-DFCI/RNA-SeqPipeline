@@ -516,6 +516,43 @@ mkdir $REPORT_DIR
 ############################################################
 
 
+############################################################
+#Report creation:
+
+echo "
+###########################################################################################
+#                                                                                         #  
+#                                                                                         #  
+#                                 RNA-SEQC SECTION                                        #  
+#                                                                                         #  
+#                                                                                         #  
+###########################################################################################
+"
+
+
+#create the reports with RNA-seQC:
+while read line; do
+ 	SAMPLE=$(echo $line | awk '{print $1}')
+	SAMPLE_BAM=$PROJECT_DIR'/'$SAMPLE_DIR_PREFIX$SAMPLE'/'$ALN_DIR_NAME'/'$SAMPLE$FINAL_BAM_SUFFIX
+
+        #create output directory
+        SAMPLE_QC_DIR=$REPORT_DIR'/'$RNA_SEQC_DIR'/'$SAMPLE
+        mkdir -p $SAMPLE_QC_DIR
+ 
+    	if [ $TEST -eq $NUM0 ]; then
+		java -jar $RNA_SEQC_JAR \
+		-o $SAMPLE_QC_DIR \
+		-r $GENOMEFASTA \
+		-s "$SAMPLE|$SAMPLE_BAM|-" \
+		-t $GTF_FOR_RNASEQC || { ( set -o posix ; set ) >>$PROJECT_DIR/$VARIABLES; echo "Something failed on performing QC step.  Check the output for guidance."; }
+	else
+		echo "Perform mock QC analysis, etc. on "$SAMPLE
+	fi
+done < $VALID_SAMPLE_FILE
+
+############################################################
+
+
 
 ############################################################
 #get the normalized counts via DESEQ:
@@ -564,41 +601,6 @@ fi
 ############################################################
 
 
-############################################################
-#Report creation:
-
-echo "
-###########################################################################################
-#                                                                                         #  
-#                                                                                         #  
-#                                 RNA-SEQC SECTION                                        #  
-#                                                                                         #  
-#                                                                                         #  
-###########################################################################################
-"
-
-
-#create the reports with RNA-seQC:
-while read line; do
- 	SAMPLE=$(echo $line | awk '{print $1}')
-	SAMPLE_BAM=$PROJECT_DIR'/'$SAMPLE_DIR_PREFIX$SAMPLE'/'$ALN_DIR_NAME'/'$SAMPLE$FINAL_BAM_SUFFIX
-
-        #create output directory
-        SAMPLE_QC_DIR=$REPORT_DIR'/'$RNA_SEQC_DIR'/'$SAMPLE
-        mkdir -p $SAMPLE_QC_DIR
- 
-    	if [ $TEST -eq $NUM0 ]; then
-		java -jar $RNA_SEQC_JAR \
-		-o $SAMPLE_QC_DIR \
-		-r $GENOMEFASTA \
-		-s "$SAMPLE|$SAMPLE_BAM|-" \
-		-t $GTF_FOR_RNASEQC || { ( set -o posix ; set ) >>$PROJECT_DIR/$VARIABLES; echo "Something failed on performing QC step.  Check the output for guidance."; }
-	else
-		echo "Perform mock QC analysis, etc. on "$SAMPLE
-	fi
-done < $VALID_SAMPLE_FILE
-
-############################################################
 # GSEA:
 
 
