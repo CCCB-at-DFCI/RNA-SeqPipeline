@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 #default logging file:
 LOGFILE=log.txt
 
@@ -35,16 +34,17 @@ function usage
 	echo "**************************************************************************************************"
 	echo "usage: 
 		-d | --dir <path to sample directory> 
-		-s | --samples <path to samples_file> 
 		-g | --genome <hg19 | mm10>
-		-o | --output <path to output directory>
+		-o | --output <path to output directory- this directory does NOT exist.  The pipeline will create it.>
+		-s | --samples <path to samples_file> (optional- if missing, it will infer the samples based on the project directory structure.)
 		-c | --contrasts <contrast_file> (optional) 
 		-config <path to configuration file> (optional, configuration file-- if not given, use default)
-                -noalign (optional, default behavior is to align) 
+                -noalign (optional, default behavior is to align.  This is if you already have BAM files.  ) 
                 -paired (optional, default= single-end) 
                 -target <string> (optional- if the BAM files already exist and you want to select those with a particular suffix.  Default behavior is to find the newest BAM for each sample)
 		-no_dedup (optional, default will dedup the BAM files.  Final result is a sorted, primary BAM file)
 		-a | --aligner <STAR | SNAPR> (optional, default is STAR)
+                -align_only (optional, if generating only BAM, count files, and QC.  Skips differential expression analysis.)
 		-test (optional, for simple test)"
 	echo "**************************************************************************************************"
 }
@@ -133,6 +133,9 @@ while [ "$1" != "" ]; do
                         shift
                         TARGET_BAM=$1
                         ;;
+                -align_only )
+                        SKIP_ANALYSIS=1
+                        ;;
 		-h | --help )
 			usage
 			exit
@@ -163,14 +166,7 @@ fi
 
 if [ "$TARGET_DIR" == "" ]; then
     echo ""
-    echo "ERROR: Missing the target directory (where the final analysis will be placed).  Please try again."
-    usage
-    exit 1
-fi
-
-if [ "$SAMPLES_FILE" == "" ]; then
-    echo ""
-    echo "ERROR: Missing the samples file.  Please try again."
+    echo "ERROR: Missing the target directory path argument (where the final analysis will be placed).  Please try again."
     usage
     exit 1
 fi
@@ -200,6 +196,11 @@ fi
 #if TEST was not set, then do NOT test
 if [ "$TEST" == "" ]; then
     TEST=0
+fi
+
+#if SKIP_ANALYSIS was not set, then we DO want to perform analysis, so set the flag to zero
+if [ "$SKIP_ANALYSIS" == "" ]; then
+    SKIP_ANALYSIS=0
 fi
 
 #if the aligner was not explicitly set, default to STAR
@@ -239,7 +240,6 @@ export DESIGN_MTX_FILE=$PROJECT_DIR'/'$DESIGN_MTX_FILE
 export COUNTS_DIR=$PROJECT_DIR'/'$COUNTS_DIR
 export ASSEMBLY
 export PROJECT_DIR
-export SAMPLES_FILE
 export PAIRED_READS
 export ALIGNER
 
@@ -255,6 +255,18 @@ if [ "$TARGET_BAM" == "" ]; then
     TARGET_BAM=$BAM_EXTENSION       
 fi
 
+if [ "$SAMPLES_FILE" == "" ]; then
+    
+    #in case this was not set in the input arguments-- since the samples were not annotated, we cannot run any diff exp analysis.  Set the flag to just align:
+    SKIP_ANALYSIS=1 #in case this was not set in the input arguments
+
+    SAMPLES_FILE=$PROJECT_DIR/samples.txt
+    #create a sample annotation file by parsing the directory structure and assigning a dummy group annotation
+    ls -d $PROJECT_DIR/$SAMPLE_DIR_PREFIX* | sed -e "s/.*$SAMPLE_DIR_PREFIX//g" | sed -e 's/$/\tX/g' >$SAMPLES_FILE
+fi
+
+
+export SAMPLES_FILE
 export TARGET_BAM
 export DEDUP
 export FINAL_BAM_SUFFIX
@@ -514,9 +526,6 @@ else
 	done
 fi
 
-#with the count files moved, create a design matrix for DESeq:
-$PYTHON $CREATE_DESIGN_MATRIX_SCRIPT || { ( set -o posix ; set ) >>$PROJECT_DIR/$VARIABLES; echo "Failed in creating design matrix.  Exiting"; exit 1; }
-
 ############################################################
 
 
@@ -565,6 +574,13 @@ done < $VALID_SAMPLE_FILE
 ############################################################
 
 
+# if the SKIP_ANALYSIS flag has been set to 1, then exit here
+if [ $SKIP_ANALYSIS -eq $NUM1 ]; then
+        echo "Alignments complete.  Skipping analysis since the -align_only flag has been set"
+        exit 0
+fi
+
+
 
 ############################################################
 #get the normalized counts via DESEQ:
@@ -594,6 +610,9 @@ else
 	echo "Perform mock normalized counts with DESeq."
 fi
 
+#with the count files moved, create a design matrix for DESeq:
+$PYTHON $CREATE_DESIGN_MATRIX_SCRIPT || { ( set -o posix ; set ) >>$PROJECT_DIR/$VARIABLES; echo "Failed in creating design matrix.  Exiting"; exit 1; }
+
 if [ -e "$CONTRAST_FILE" ]; then
 	echo "Run differential expression with DESeq"
 	while read contrast; do
@@ -611,9 +630,6 @@ else
 	echo "Skipping differential analysis since no contrast file was specified."
 fi
 ############################################################
-
-
-# GSEA:
 
 
 echo "
