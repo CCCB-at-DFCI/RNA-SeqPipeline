@@ -14,9 +14,9 @@ SNAPR = os.environ['SNAPR']
 STAR = os.environ['STAR']
 
 class ProjectVariables:
-  """
-  Object to hold project-specific data together
-  """
+    """
+    Object to hold project-specific data together
+    """
     def __init__(self,
                  project_dir,
                  output_dir,
@@ -169,7 +169,7 @@ def inject_script(sample, project_data):
                                     str(os.path.join(sample.sample_dir, project_data.output_dir)), str(sample.script_template))
 
     #paired or single-end protocol specifics:
-    if sample.sample_metadata.paired_end_reads == 1: # if paired
+    if project_data.paired_end_reads == 1: # if paired
         sample.script_template = re.sub("%PAIRED%", str(1), str(sample.script_template))
         sample.script_template = re.sub("%FASTQFILEA%", str(sample.fastq_a), str(sample.script_template))
         sample.script_template = re.sub("%FASTQFILEB%", str(sample.fastq_b), str(sample.script_template))
@@ -178,7 +178,7 @@ def inject_script(sample, project_data):
         sample.script_template = re.sub("%FASTQFILEA%", str(sample.fastq_a), str(sample.script_template))
         sample.script_template = re.sub("%FASTQFILEB%", "", str(sample.script_template))
 
-    if sample.sample_metadata.dedup == 1:
+    if project_data.dedup == 1:
         sample.script_template = re.sub("%DEDUP%", str(1), str(sample.script_template))
     else:
         sample.script_template = re.sub("%DEDUP%", str(0), str(sample.script_template))

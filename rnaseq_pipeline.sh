@@ -175,6 +175,11 @@ if [ "$TEST" == "" ]; then
     TEST=0
 fi
 
+#if CONTRAST_FILE was not set, then we cannot perform analysis-- we do not know the contrasts to perform.
+if [ "$CONTRAST_FILE" == "" ]; then
+    SKIP_ANALYSIS=1
+fi
+
 #if SKIP_ANALYSIS was not set, then we DO want to perform analysis, so set the flag to zero
 if [ "$SKIP_ANALYSIS" == "" ]; then
     SKIP_ANALYSIS=0
@@ -270,13 +275,13 @@ if [[ $ALIGNER == $STAR  ]]; then
     ALIGN_SCRIPT=$STAR_ALIGN_SCRIPT
     GENOME_INDEX=$STAR_GENOME_INDEX
     TRANSCRIPTOME_INDEX=    #nothing
-    ALIGNER_REF_URL=STAR_REF_URL
+    ALIGNER_REF_URL=$STAR_REF_URL
 elif [[ $ALIGNER == $SNAPR ]]; then
     ALN_DIR_NAME=$SNAPR_ALIGN_DIR
     ALIGN_SCRIPT=$SNAPR_ALIGN_SCRIPT
     GENOME_INDEX=$SNAPR_GENOME_INDEX
     TRANSCRIPTOME_INDEX=$SNAPR_TRANSCRIPTOME_INDEX    
-    ALIGNER_REF_URL=SNAPR_REF_URL
+    ALIGNER_REF_URL=$SNAPR_REF_URL
 else
     echo -e "\n\nERROR: Unrecognized aligner.  Exiting\n\n"
     exit 1
@@ -756,9 +761,6 @@ find $PROJECT_DIR -type d -not -path "$PROJECT_DIR" | sed -e "s:$PROJECT_DIR:$TA
 # move all the files (EXCEPT FASTQ) into the target directory:
 find $PROJECT_DIR -type f | grep -Pv ".*$FASTQ_SUFFIX" | sed -e "s:.*:'&':;p;s:$PROJECT_DIR:$TARGET_DIR:g" | xargs -t -n2 mv
 
-#close the logging block
-} | tee $TARGET_DIR/$LOGFILE
-
 echo "
 ###########################################################################################################
 #                                                                                                         #  
@@ -766,5 +768,9 @@ echo "
 #                                                                                                         #  
 ###########################################################################################################
 "
+
+#close the logging block
+} | tee $TARGET_DIR/$LOGFILE
+
 
 
