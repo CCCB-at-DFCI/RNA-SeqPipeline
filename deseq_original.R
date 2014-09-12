@@ -11,6 +11,7 @@ if(!require("gplots", character.only=T)) stop("Please install the gplots package
 # 6: a name for the heatmap file (used for finding the files elsewhere).  Something like 'heatmap.png'.  
 #     Will have a more specific identifier pre-pended to this.
 # 7: the number of genes shown in the heatmap.  Take the top genes by mean expression across all samples.
+# 8: a flag/id that will allow easier identification of contrast-level files/analyses
 
 args<-commandArgs(TRUE)
 OUTPUT_DIR<-args[1]
@@ -20,6 +21,7 @@ CONDITION_A<-args[4]
 CONDITION_B<-args[5]
 HEATMAP_FILE<-args[6]
 NUM_GENES<-as.integer(args[7])
+CONTRAST_FLAG<-args[8]
 
 # DESIGN_MTX_FILE is created by a python script and has the following columns:
 # 1: sample
@@ -72,7 +74,7 @@ cds=estimateDispersions(cds)
 res=nbinomTest(cds, CONDITION_A, CONDITION_B)
 
 #write the differential expression results to a file:
-file_id<-paste(CONDITION_B, "vs", CONDITION_A, sep="_")
+file_id<-paste(CONDITION_B, CONTRAST_FLAG, CONDITION_A, sep='')
 basefile_id<-paste(file_id, DESEQ_OUTPUT_IDENTIFIER,".csv", sep='')
 result_file<-paste(OUTPUT_DIR, basefile_id, sep='/')
 write.csv(as.data.frame(res), file=result_file, row.names=FALSE)
@@ -109,7 +111,7 @@ if (ratio < 1)
 text_size = 1.5+1/log10(NUM_GENES)
 
 #write the heatmap as a png:
-file_id<-paste(CONDITION_B, "vs", CONDITION_A, sep="_")
+file_id<-paste(CONDITION_B, CONTRAST_FLAG, CONDITION_A, sep='')
 HEATMAP_FILE<-paste(file_id, HEATMAP_FILE, sep=".")
 png(filename=paste(OUTPUT_DIR,HEATMAP_FILE, sep="/"), width=w, height=h, units="px")
 heatmap.2(exprs(vsdFull)[select,], col=heatmapcols, trace="none", margin=c(15,12), cexRow=text_size, cexCol=text_size)

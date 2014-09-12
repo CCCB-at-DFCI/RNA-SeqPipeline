@@ -13,11 +13,10 @@ import traceback
 SNAPR = os.environ['SNAPR']
 STAR = os.environ['STAR']
 
-
-class SampleMetaData:
-    """
-    Object to hold project-specific details together
-    """
+class ProjectVariables:
+  """
+  Object to hold project-specific data together
+  """
     def __init__(self,
                  project_dir,
                  output_dir,
@@ -29,9 +28,9 @@ class SampleMetaData:
                  genome_index,
                  transcriptome_index,
                  bam_suffix,
-                 samplesheet,
                  aligner,
-                 dedup):
+                 dedup,
+                 picard_location):
         self.project_dir = project_dir
         self.output_dir = output_dir
         self.paired_end_reads = paired_end_reads
@@ -42,18 +41,18 @@ class SampleMetaData:
         self.genome_index = genome_index
         self.transcriptome_index = transcriptome_index
         self.bam_suffix = bam_suffix
-        self.samplesheet = samplesheet
         self.aligner = aligner
         self.dedup = dedup
+        self.picard_location = picard_location
 
 
 class Sample:
 
-    def __init__(self, sample_name, condition, sample_metadata, script_template_string):
+    def __init__(self, sample_name, condition, script_template_string, samplesheet):
         self.sample_name = sample_name
         self.condition = condition
-        self.sample_metadata = sample_metadata
         self.script_template = script_template_string
+        self.samplesheet = samplesheet
         self.sample_dir = ""
         self.fastq_a = ""
         self.fastq_b = ""
@@ -93,13 +92,13 @@ def read_template_script(template_script):
         sys.exit("I/O Error:  Could not find the template script file: "+str(template_script))
 
 
-def valid_sample(sample):
+def valid_sample(sample, project_data):
     """
     Receives a Sample object.  Check that the proper files exist and return True if ok, else False
     """
     if not sample.fastq_a:
         return False
-    if sample.sample_metadata.paired_end_reads == 1 and not sample.fastq_b:
+    if project_data.paired_end_reads == 1 and not sample.fastq_b:
         return False
     return True
 
@@ -124,13 +123,13 @@ def parse_seq_info(samplesheet):
         return None
 
 
-def prepare_sample(sample):
+def prepare_sample(sample, project_data):
     """
     Receives a Sample object-- prepares things like the paths, etc. based on the project metadata
     and the sample-specific data
     """
-    sample.sample_dir = os.path.join(sample.sample_metadata.project_dir,
-                                       str(sample.sample_metadata.sample_dir_prefix)+sample.sample_name)
+    sample.sample_dir = os.path.join(project_data.project_dir,
+                                       str(project_data.sample_dir_prefix)+sample.sample_name)
 
     #locate the fastq files (if not found, they are set to None)
     search_pattern = os.path.join(sample.sample_dir, sample.sample_name)
@@ -149,24 +148,25 @@ def prepare_sample(sample):
 
     #extract sample metadata (for read group info) from the samplesheet:
     
-    sample.sequencing_info_dict = parse_seq_info(os.path.join(sample.sample_dir, sample.sample_metadata.samplesheet))
+    sample.sequencing_info_dict = parse_seq_info(os.path.join(sample.sample_dir, sample.samplesheet))
 
     return sample
 
 
-def inject_script(sample):
+def inject_script(sample, project_data):
     """
     Inject the relevant parameters into the template scripts
     """
     #inject parameters common to alignment template scripts:
-    sample.script_template = re.sub("%GTF%", sample.sample_metadata.gtf_file, str(sample.script_template))
-    sample.script_template = re.sub("%GENOME_INDEX%", str(sample.sample_metadata.genome_index), str(sample.script_template))
-    sample.script_template = re.sub("%BAM_FILE_SUFFIX%", str(sample.sample_metadata.bam_suffix), str(sample.script_template))
+    sample.script_template = re.sub("%GTF%", str(project_data.gtf_file), str(sample.script_template))
+    sample.script_template = re.sub("%GENOME_INDEX%", str(project_data.genome_index), str(sample.script_template))
+    sample.script_template = re.sub("%BAM_FILE_SUFFIX%", str(project_data.bam_suffix), str(sample.script_template))
     sample.script_template = re.sub("%SAMPLE_NAME%", str(sample.sample_name), str(sample.script_template))
     sample.script_template = re.sub("%SAMPLE_DIR%", str(sample.sample_dir), str(sample.script_template))
-    sample.script_template = re.sub("%ASSEMBLY%", str(sample.sample_metadata.assembly), str(sample.script_template))
+    sample.script_template = re.sub("%ASSEMBLY%", str(project_data.assembly), str(sample.script_template))
+    sample.script_template = re.sub("%PICARD_DIR%", str(project_data.picard_location), str(sample.script_template))
     sample.script_template = re.sub("%OUTPUTDIRECTORY%",
-                                    str(os.path.join(sample.sample_dir, sample.sample_metadata.output_dir)), str(sample.script_template))
+                                    str(os.path.join(sample.sample_dir, project_data.output_dir)), str(sample.script_template))
 
     #paired or single-end protocol specifics:
     if sample.sample_metadata.paired_end_reads == 1: # if paired
@@ -185,7 +185,7 @@ def inject_script(sample):
 
     #aligner specifics:
     if aligner.lower() == SNAPR.lower():
-      sample.script_template = re.sub("%TRANSCRIPTOME_INDEX%", str(sample.sample_metadata.transcriptome_index), str(sample.script_template))
+      sample.script_template = re.sub("%TRANSCRIPTOME_INDEX%", str(project_data.transcriptome_index), str(sample.script_template))
     elif aligner.lower() == STAR.lower():
         fcid="default"
         lane="default"
@@ -206,11 +206,11 @@ def inject_script(sample):
     return sample
 
 
-def write_script(sample):
+def write_script(sample, project_data):
     """
     Writes the formatted template to a file in the appropriate location
     """
-    outfile = str(sample.sample_name)+str(sample.sample_metadata.script_nametag)
+    outfile = str(sample.sample_name)+str(project_data.script_nametag)
     outfile = os.path.join(sample.sample_dir, outfile)
     with open(outfile, 'w') as o:
         o.write(sample.script_template)
@@ -237,6 +237,7 @@ if __name__ == '__main__':
     genome_index: is a full path to the genome index for the aligner
     bam_suffix: is a file suffix to place on the output BAM file so that it may be easily identified later on in the pipeline
     dedup: specifies if we should dedup (1) or not (0)
+    picard_location: path to picard tools
     """
 
     try:
@@ -255,6 +256,7 @@ if __name__ == '__main__':
         gtf_file = os.environ['GTF']
         aligner = os.environ['ALIGNER']
         dedup = int(os.environ['DEDUP'])
+        picard_location = os.environ['PICARD_LOCATION']
 
         if aligner.lower() == SNAPR.lower():
             try:
@@ -266,7 +268,7 @@ if __name__ == '__main__':
             transcriptome_index=""
 
         #create a data object to hold all the metadata about the project/sample:
-        sample_metadata = SampleMetaData(
+        project_data = ProjectVariables(
             project_dir,
             output_dir,
             paired_end_reads,
@@ -277,9 +279,9 @@ if __name__ == '__main__':
             genome_index,
             transcriptome_index,
             bam_suffix,
-            samplesheet,
             aligner,
-            dedup
+            dedup,
+            picard_location
         )
 
         #get a list of tuples for samples/conditions from the sample file:
@@ -289,13 +291,13 @@ if __name__ == '__main__':
         script_template_string = read_template_script(template_script)
 
         #create a list of Sample objects
-        all_samples = [Sample(sample_name, condition, sample_metadata, script_template_string) for sample_name, condition in samples]
+        all_samples = [Sample(sample_name, condition, script_template_string, samplesheet) for sample_name, condition in samples]
 
         #prepare samples
-        all_samples = map(prepare_sample, all_samples)
+        all_samples = map(lambda s: prepare_sample(s, project_data), all_samples)
 
         #validate the samples-- check that the correct files exist:
-        all_samples = [s for s in all_samples if valid_sample(s)]
+        all_samples = [s for s in all_samples if valid_sample(s, project_data)]
 
         with open(validated_sample_filepath, 'w') as vsf:
             for s in all_samples:
@@ -303,10 +305,10 @@ if __name__ == '__main__':
 
 
         #inject the parameters:
-        all_samples = map(inject_script, all_samples)
+        all_samples = map(lambda s: inject_script(s, project_data), all_samples)
 
         #write the scripts
-        map(write_script, all_samples)
+        map(lambda s: write_script(s, project_data), all_samples)
 
     except KeyError:
         sys.exit("Alignment script preparation failed.")

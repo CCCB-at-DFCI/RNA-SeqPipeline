@@ -5,11 +5,11 @@
 PIPELINE_HOME="/cccbstore-rc/projects/cccb/pipelines/RNA-SeqPipeline"
 
 #a directory containing the template files+libraries for creating the output report. will be filled-in by scripts at end of pipeline
-REPORT_TEMPLATE_DIR=$PIPELINE_HOME"/report_generator" #somewhere centrally located (do not change)
-REPORT_TEMPLATE_LIBRARIES=$REPORT_TEMPLATE_DIR'/lib/'
-REPORT_TEMPLATE_HTML=$REPORT_TEMPLATE_DIR'/rnaseq_template.html'
-ERROR_PAGE=$REPORT_TEMPLATE_DIR'/error.html'
-HELP_PAGE_CONTENT=$REPORT_TEMPLATE_DIR'/explanations.html'
+REPORT_FILES_DIR=$PIPELINE_HOME"/report_files" #somewhere centrally located (do not change)
+REPORT_TEMPLATE_LIBRARIES=$REPORT_FILES_DIR'/lib/'
+REPORT_HTML_TEMPLATES_DIR=$REPORT_FILES_DIR'/html_templates'
+FINAL_REPORT_TEMPLATE_HTML=$REPORT_HTML_TEMPLATES_DIR'/base_template.html'
+TEMPLATE_ELEMENT_TAG=.element
 
 # the location of the template alignment scripts:
 SNAPR_ALIGN_SCRIPT=$PIPELINE_HOME"/snapr_align_template.sh"
@@ -19,7 +19,7 @@ STAR_ALIGN_SCRIPT=$PIPELINE_HOME"/star_align_template.sh"
 PREPARE_ALIGN_SCRIPT=$PIPELINE_HOME'/prepare_align_script.py'
 CHECK_BAM_SCRIPT=$PIPELINE_HOME'/check_for_bam.py'
 CREATE_DESIGN_MATRIX_SCRIPT=$PIPELINE_HOME'/create_design_matrix.py'
-CREATE_REPORT_SCRIPT=$REPORT_TEMPLATE_DIR'/create_report.py'
+CREATE_REPORT_SCRIPT=$REPORT_FILES_DIR'/create_report.py'
 PROCESS_COUNT_FILE_SCRIPT=$PIPELINE_HOME'/process_count_files.R'
 R_DEPENDENCY_CHECK_SCRIPT=$PIPELINE_HOME'/check_R_dependencies.R'
 
@@ -67,6 +67,9 @@ export PATH=$STAR_LOCATION:$PATH
 
 # a name for the directory where the alignments will be processed/stored
 STAR_ALIGN_DIR=star_aln
+
+# url to documentation for output report:
+STAR_REF_URL="http://bioinformatics.oxfordjournals.org/content/29/1/15"
 #####################################################################################
 
 
@@ -96,6 +99,9 @@ COUNTFILE_SUFFIX=".gene_name.counts.txt"
 
 # a name for the directory where the alignments will be processed/stored
 SNAPR_ALIGN_DIR=snapr_aln
+
+# url to documentation for output report
+SNAPR_REF_URL="http://price.systemsbiology.net/SNAPR"
 #####################################################################################################
 
 
@@ -130,7 +136,8 @@ GSEA_GCT_FILE=expressions.gct
 GSEA_DEFAULT_HTML=index.html
 #####################################################################################################
 
-
+# constants related to FASTQC:
+FASTQC_DEFAULT_HTML=fastqc_report.html #the name of the default html file that is produced by fastqc 
 
 #####################################################################################################
 #some other configuration parameters-- most are "arbitrary" and can be left as-is.
@@ -149,6 +156,8 @@ READ_1_FASTQ_TAG=R1
 READ_2_FASTQ_TAG=R2
 FASTQ_SUFFIX=fastq.gz
 
+# a flag for identifying contrast-level files/analyses
+CONTRAST_FLAG="_vs_"
 
 # a file suffix/extension for identifying the alignment scripts that are generated on-the-fly by a python script
 FORMATTED_ALIGN_SCRIPT_NAMETAG="_aln.sh"

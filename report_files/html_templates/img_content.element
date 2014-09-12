@@ -1,0 +1,4 @@
+<div>
+	<img src="#LINK#" alt="File not processed/found" style="width: 95%;"></img>
+</div>
+<button class="btn btn-primary view_close" type="button">Close panel</button>

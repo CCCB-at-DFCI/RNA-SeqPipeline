@@ -1,0 +1,9 @@
+<div class="panel panel-primary">
+	<div id="#PANEL_ID#_panel" class="panel-heading keep-pointer">
+		<h3 class="panel-title">#PANEL_TITLE#</h3>
+	</div>
+	<div id="#PANEL_ID#_view" class="panel-body content-panel">
+		<!-- #PANEL_CONTENT# -->
+		<!-- #PANEL_CONTENT# -->
+	</div>
+</div>

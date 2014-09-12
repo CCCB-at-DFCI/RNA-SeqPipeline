@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>RNA-Seq Analysis Results</title>
+		
+		<!-- jQuery-->
+		<!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>-->
+		<script src="lib/jquery.min.js"></script>
+		<!-- Bootstrap -->
+		<link href="lib/bootstrap.min.edit.css" rel="stylesheet">
+		
+		<!-- Custom css-->	
+		<link href="lib/rnaseq_report.css" rel="stylesheet">
+
+		<!--custom javascript-->
+		<script src="lib/rnaseq_report_custom.js"></script>
+
+	</head>
+	<body>
+    		<div class="simple_header">
+        		<div>
+            			<span class="left_header">RNA-Seq Report</span>
+            		</div>
+            		<div>
+				<span class="right_header">
+					<img id="cccb_logo" src="lib/CCCB_Logo.png"></img>
+		        	</span>
+            		</div>
+		</div>
+		
+		<div class="spacer-div">
+		</div>
+
+		<div class="container-fluid">
+			<div class="row">
+				<ul id="tabPanel" class="nav nav-tabs">
+					<!-- tabs for content are added here as <li> elements with the proper class attributes for bootstrap tabbing -->
+					<!-- #TAB_SECTION# -->
+					<!-- #TAB_SECTION# -->
+					<li>
+						<a data-toggle="tab" href="#help_section">About</a>
+					</li>
+				</ul>
+
+				<div class="tab-content">
+					<!-- Tab contents are added here-->
+					<!-- #CONTENT_SECTION#  -->
+					<!-- #CONTENT_SECTION#  -->
+					<div class="tab-pane fade" id="help_section">
+						<div class="simple_div">
+							<h2>About the analysis</h2>
+						</div>
+						<div class="container content-container">
+							<div class="row">
+<div>
+<h3>Read-alignment</h3>
+Read alignment to the #ASSEMBLY# reference genome/transcriptome was performed with #ALIGNER# (<a href="#ALIGNER_REF_URL#">#ALIGNER_REF_URL#</a>).
+</div>
+								<div>
+									<h3>FASTQ Files</h3>
+									These are raw sequence files converted to base-calls by the sequencer software.  More information about 
+FASTQ format: <a href="http://en.wikipedia.org/wiki/FASTQ_format">http://en.wikipedia.org/wiki/FASTQ_format</a>  
+								</div>
+								<div>
+									<h3>BAM files</h3>
+									These are binary versions of <b>S</b>equence <b>A</b>lignment <b>M</b>ap (SAM) formatted files, which 
+are produced as output from the alignment software.  Information about the format <a href="http://samtools.github.io/hts-specs/SAMv1.pdf" >here (PDF)</a>.  These are suitable 
+for loading into the Broad Institute's <a href="http://www.broadinstitute.org/igv/">IGV genome browser</a> (note that BAM index files will need to be created to use these 
+files with IGV).
+								</div>
+<div>
+<h3>Read-counts</h3>
+	Sequencing reads aligning to unique exons are summed within each gene locus.  Counting is performed by featureCounts software (<a 
+href="http://bioinformatics.oxfordjournals.org/content/30/7/923.full.pdf">http://bioinformatics.oxfordjournals.org/content/30/7/923.full.pdf</a>).  Reads located in 
+regions 
+where 
+genomic features overlap are ignored since they cannot be 
+definitively assigned to a single transcript. 
+</div>
+								<div>
+									<h3>RNA-Seq QC report</h3>
+									RNA-Seq quality metrics are produced by the Broad Institute's <a href="http://www.broadinstitute.org/cancer/cga/rna-seqc" target="_blank">RNA-SeQC</a> tool.
+								</div>
+<div>
+	<h3>
+		Calculation of normalized counts
+	</h3>
+	Read-count normalization is performed by DESeq software (<a href="http://genomebiology.com/2010/11/10/R106/">http://genomebiology.com/2010/11/10/R106/</a>). This 
+attempts to control biases in the 
+read counts due to input library size via a robust median-based calculation.  
+Assuming that most genes are not differentially expressed, consistent differences in counts between samples provides a method of assessing the relative size of the input 
+libraries.  
+	Further details of the normalization procedure may be found in the DESeq publication referenced above.  
+</div>
+<!-- #DGE_ANALYSIS# 
+<div>
+<div>
+	<h3>
+		DESeq Analysis
+	</h3>
+
+	Differential expression analysis was performed with the DESeq tool, provided as part of R's Bioconductor package.  
+	More detailed information can be found in the <a href="http://genomebiology.com/2010/11/10/r106" target="_blank">original DESeq publication</a>.  
+	In short, the analysis steps consist of: 
+	<ul>
+	<li>Count normalization.  By examining the counts of all genes across all samples, the software attempts to normalize for differences due to input library size.
+	An inherent assumption of this step is that <i>most</i> genes in a series of contrasts are not differentially expressed.  The normalized read counts for a particular 
+	sample are based on the median across all genes; this attempts to minimize the effect of highly expressed transcripts on the normalization procedure.</li>
+	<li>Using a negative binomial model to approximate the distribution of the read counts, a mean-dispersion relationship is determined from a local regression using a 
+generalized
+	linear model of the gamma family.</li>
+	<li>For each gene, determine the probability of the observed counts under the null hypothesis that the counts in each condition are the same.  The raw P-values are 
+	adjusted using the standard Benjamini-Hochberg multiple testing correction to control the false-discovery rate (FDR).  These values are also commonly called "q-values". 
+</li>
+	</ul>
+</div>
+<div>
+<h3>Gene-set enrichment analysis (GSEA)</h3>
+Gene-set enrichment analysis uses the normalized gene-level read-counts as a proxy for the relative expression of each gene.  Using gene sets curated from databases of canonical 
+pathways, the software tests if genes in particular pathways display consistent and significantly different expression between the contrasted biological states.  More 
+information about the method and software is available at <a href="http://www.broadinstitute.org/gsea/index.jsp">http://www.broadinstitute.org/gsea/index.jsp</a>.
+</div>
+<div>
+	<h3>
+		Heatmaps
+	</h3>
+	Heatmaps were prepared on a contrast-level basis.  For each contrast, we take the most highly expressed genes as determined by their mean across all samples.  As this 
+report
+	is prepared as an initial inspection of the data, these images may not be appropriate for every study.  Further, specific analysis can be arranged with the assistance of 
+the CCCB.
+</div>
+</div>
+#DGE_ANALYSIS# -->
+
+							</div>
+						</div>
+					</div>
+				</div> <!--close tab-content div -->
+			</div> <!-- close row div -->
+		</div> <!-- close container-fluid -->
+		<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+
+		<!-- Include all compiled plugins (below), or include individual files as needed -->
+	    	<script src="lib/bootstrap.min.js"></script>
+	</body>
+</html>
+
+

@@ -1,0 +1,7 @@
+<div class="top-and-bottom-padding">
+	<a href="#LINK#" target="#ID#_iframe">#RETURN_LINK_TEXT#</a>
+	<a class="padded-link" href="#LINK#" target="_blank">Open in new tab</a>
+</div>
+<iframe id="#ID#_iframe" name="#ID#_iframe" src="#LINK#" class="simple_iframe" marginwidth="0" marginheight="0" frameborder="0" vspace="0" hspace="0">
+</iframe>
+<button class="btn btn-primary view_close" type="button">Close panel</button>

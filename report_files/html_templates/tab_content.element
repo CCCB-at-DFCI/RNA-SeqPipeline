@@ -1,0 +1,11 @@
+<div class="tab-pane fade" id="#ID#">
+	<div class="simple_div">
+		<h2>#SECTION_HEADER#</h2>
+	</div>
+	<div class="container content-container">
+		<div class="row">
+			<!-- #REPEATING_COMPONENT#  -->
+			<!-- #REPEATING_COMPONENT#  -->
+		</div>
+	</div>
+</div>
