@@ -759,7 +759,10 @@ echo "
 find $PROJECT_DIR -type d -not -path "$PROJECT_DIR" | sed -e "s:$PROJECT_DIR:$TARGET_DIR:g" | xargs -t -i mkdir {}
 
 # move all the files (EXCEPT FASTQ) into the target directory:
-find $PROJECT_DIR -type f | grep -Pv ".*$FASTQ_SUFFIX" | sed -e "s:.*:'&':;p;s:$PROJECT_DIR:$TARGET_DIR:g" | xargs -t -n2 mv
+#find $PROJECT_DIR -type f | grep -Pv ".*$FASTQ_SUFFIX" | sed -e "s:.*:'&':;p;s:$PROJECT_DIR:$TARGET_DIR:g" | xargs -t -n2 mv
+
+# move all the files (including FASTQ) into the target directory:
+find $PROJECT_DIR -type f | sed -e "s:.*:'&':;p;s:$PROJECT_DIR:$TARGET_DIR:g" | xargs -t -n2 mv
 
 echo "
 ###########################################################################################################
