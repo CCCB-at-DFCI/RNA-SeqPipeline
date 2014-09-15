@@ -258,7 +258,7 @@ def write_completed_template(completed_html_report, template_html):
 if __name__ == "__main__":
 
 	try:
-		template_html_file = os.environ['REPORT_TEMPLATE_HTML'] #full path to the template html file
+		template_html_file = os.environ['FINAL_REPORT_TEMPLATE_HTML'] #full path to the template html file
 		completed_html_report = os.path.join(os.environ['REPORT_DIR'], os.environ['FINAL_RESULTS_REPORT']) #full path to the formatted html file that will be created
 		template_elements_dir = os.environ['REPORT_HTML_TEMPLATES_DIR'] #full path to a directory containing the template html files and elements
 		template_element_tag = os.environ['TEMPLATE_ELEMENT_TAG'] #file extension/tag to locate the pre-defined template html files
@@ -270,14 +270,8 @@ if __name__ == "__main__":
 		project_dir = os.environ['PROJECT_DIR']
 		normalized_count_file = os.environ['NORMALIZED_COUNTS_FILE'] #the full path of the file for the normalized counts
 		skip_analysis = int(os.environ['SKIP_ANALYSIS']) #a boolean (0,1) indicating if analysis beyond alignment was performed
-		deseq_outfile_tag = os.environ['DESEQ_OUTFILE_TAG'] # a string/tag used for identifying the output contrast files from DESeq
-		heatmap_file_tag = os.environ['HEATMAP_FILE'] # a string/tag used to identify heatmap files (which are located in deseq_result_dir)
-		contrast_file = os.environ['CONTRAST_FILE'] #path to the contrast file
-		contrast_tag = os.environ['CONTRAST_FLAG'] # a tag (typically "_vs_" for easy identification of the contrast-level files/analyses)
 		rna_qc_report = os.environ['DEFAULT_RNA_SEQC_REPORT'] #the name of the default output html report created by RNA-SeQC
 		qc_dir = os.path.join(os.environ['REPORT_DIR'], os.environ['RNA_SEQC_DIR']) #full path to the QC output files
-		gsea_dir = os.environ['GSEA_OUTPUT_DIR'] #full path to the directory containing the GSEA analyses
-		gsea_default_html = os.environ['GSEA_DEFAULT_HTML'] #the name of the default html report that GSEA produces
 		fastqc_default_html = os.environ['FASTQC_DEFAULT_HTML'] #the name of the default html report created by fastqc
 		aligner = os.environ['ALIGNER']
 		aligner_ref_url = os.environ['ALIGNER_REF_URL']
@@ -332,6 +326,14 @@ if __name__ == "__main__":
 			-gsea
 		"""
 		if not skip_analysis:
+
+			contrast_file = os.environ['CONTRAST_FILE'] #path to the contrast file
+			contrast_tag = os.environ['CONTRAST_FLAG'] # a tag (typically "_vs_" for easy identification of the contrast-level files/analyses)
+			deseq_outfile_tag = os.environ['DESEQ_OUTFILE_TAG'] # a string/tag used for identifying the output contrast files from DESeq
+			heatmap_file_tag = os.environ['HEATMAP_FILE'] # a string/tag used to identify heatmap files (which are located in deseq_result_dir)
+			gsea_dir = os.environ['GSEA_OUTPUT_DIR'] #full path to the directory containing the GSEA analyses
+			gsea_default_html = os.environ['GSEA_DEFAULT_HTML'] #the name of the default html report that GSEA produces
+
 			#parse the contrast file:
 			all_contrasts = get_contrasts(contrast_file)			
 
