@@ -62,7 +62,7 @@ date
 #Run alignments with SNAPR
 if [ $PAIRED -eq $NUM0 ]; then
     echo "run single-end alignment for " $SAMPLE_NAME
-    STAR --genomeDir $GENOME_INDEX \
+    STARstatic --genomeDir $GENOME_INDEX \
          --readFilesIn $FASTQFILEA \
          --runThreadN 4 \
          --readFilesCommand zcat \
@@ -74,7 +74,7 @@ if [ $PAIRED -eq $NUM0 ]; then
          --outFileNamePrefix $OUTDIR'/'$SAMPLE_NAME'.'
 elif [ $PAIRED -eq $NUM1 ]; then
     echo "run paired alignement for " $SAMPLE_NAME
-    STAR --genomeDir $GENOME_INDEX \
+    STARstatic --genomeDir $GENOME_INDEX \
          --readFilesIn $FASTQFILEA $FASTQFILEB \
          --runThreadN 4 \
          --readFilesCommand zcat \
