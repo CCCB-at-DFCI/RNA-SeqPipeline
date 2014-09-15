@@ -68,6 +68,16 @@ def get_contrasts(contrast_file):
 		sys.exit('Could not locate the contrast file: '+str(contrast_file))
 
 
+def has_files(file_dict):
+	file_count = 0
+	for key, files in file_dict.iteritems():
+		file_count+=len(files)
+	if file_count == 0:
+		return False
+	else:
+		return True
+
+
 def read_template_elements(template_elements_dir, template_element_tag):
 	"""
 	This method finds all the html template element files and reads them into a dictionary.  
@@ -311,13 +321,19 @@ if __name__ == "__main__":
 		norm_count_file[os.path.basename(normalized_count_file)]=[os.path.relpath(normalized_count_file, output_report_dir)]
 		rna_qc_files = find_files(os.path.join(project_dir, output_report_dir, qc_dir, "*", rna_qc_report), output_report_dir, samples=all_samples)
 		fastqc_files = find_files(os.path.join(project_dir, "*", "*", fastqc_default_html), output_report_dir, samples=all_samples)
-
-		main_html = add_simple_link_content(main_html, template_element_dict, "FASTQ Files", "Sequence files (FASTQ) in compressed format:", fastq_files)
-		main_html = add_simple_link_content(main_html, template_element_dict, "BAM Files", "Binary sequence alignment files (BAM)", bam_files, alias_link=True)
-		main_html = add_simple_link_content(main_html, template_element_dict, "Raw read-count Files", "Raw (sample-level) sequence counts", count_files, alias_link=True)
-		main_html = add_simple_link_content(main_html, template_element_dict, "Normalized read-count Files", "Normalized count file", norm_count_file, alias_link=True)		
-		main_html = add_accordion_content(main_html, template_element_dict, "RNA-Seq QC", "RNA-Seq experiment quality reports", rna_qc_files)
-		main_html = add_accordion_content(main_html, template_element_dict, "FASTQC report", "Sequencing quality reports", fastqc_files)
+	
+		if has_files(fastq_files):
+			main_html = add_simple_link_content(main_html, template_element_dict, "FASTQ Files", "Sequence files (FASTQ) in compressed format:", fastq_files)
+		if has_files(bam_files):
+			main_html = add_simple_link_content(main_html, template_element_dict, "BAM Files", "Binary sequence alignment files (BAM)", bam_files, alias_link=True)
+		if has_files(count_files):
+			main_html = add_simple_link_content(main_html, template_element_dict, "Raw read-count Files", "Raw (sample-level) sequence counts", count_files, alias_link=True)
+		if has_files(norm_count_file):
+			main_html = add_simple_link_content(main_html, template_element_dict, "Normalized read-count Files", "Normalized count file", norm_count_file, alias_link=True)		
+		if has_files(rna_qc_files):
+			main_html = add_accordion_content(main_html, template_element_dict, "RNA-Seq QC", "RNA-Seq experiment quality reports", rna_qc_files)
+		if has_files(fastqc_files):
+			main_html = add_accordion_content(main_html, template_element_dict, "FASTQC report", "Sequencing quality reports", fastqc_files)
 
 		"""
 		Other sections of the output report include:
@@ -341,9 +357,12 @@ if __name__ == "__main__":
 			heatmap_files = find_files(os.path.join(project_dir, output_report_dir, "*", "*"+str(heatmap_file_tag)+"*"), output_report_dir, contrasts=all_contrasts, tag=contrast_tag)
 			gsea_files = find_files(os.path.join(project_dir, output_report_dir, gsea_dir, "*", gsea_default_html), output_report_dir, contrasts=all_contrasts, tag=contrast_tag)
 
-			main_html = add_simple_link_content(main_html, template_element_dict, "Differential Expression Analysis", "Results from differential expression analysis", deseq_files, alias_link=True)
-			main_html = add_accordion_content(main_html, template_element_dict, "Heatmaps", "Heatmaps of the most highly expressed genes in each contrast", heatmap_files)
-			main_html = add_accordion_content(main_html, template_element_dict, "GSEA", "Gene-set enrichment analysis of each between-group contrast", gsea_files)
+			if has_files(deseq_files):
+				main_html = add_simple_link_content(main_html, template_element_dict, "Differential Expression Analysis", "Results from differential expression analysis", deseq_files, alias_link=True)
+			if has_files(heatmap_files):
+				main_html = add_accordion_content(main_html, template_element_dict, "Heatmaps", "Heatmaps of the most highly expressed genes in each contrast", heatmap_files)
+			if has_files(gsea_files):
+				main_html = add_accordion_content(main_html, template_element_dict, "GSEA", "Gene-set enrichment analysis of each between-group contrast", gsea_files)
 
 			main_html = unhide_analysis_help(main_html)
 		write_completed_template(completed_html_report, main_html)
