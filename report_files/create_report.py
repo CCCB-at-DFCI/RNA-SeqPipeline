@@ -318,7 +318,8 @@ if __name__ == "__main__":
 		bam_files = find_files(os.path.join(project_dir, str(sample_dir_prefix)+"*", "*", "*"+str(final_bam_suffix)), output_report_dir, samples=all_samples)
 		count_files = find_files(os.path.join(project_dir, str(output_report_dir), "*", "*"+str(countfile_suffix)), output_report_dir, samples=all_samples)
 		norm_count_file = {}
-		norm_count_file[os.path.basename(normalized_count_file)]=[os.path.relpath(normalized_count_file, output_report_dir)]
+		if len(glob.glob(normalized_count_file)) == 1:
+			norm_count_file[os.path.basename(normalized_count_file)]=[os.path.relpath(normalized_count_file, output_report_dir)]
 		rna_qc_files = find_files(os.path.join(project_dir, output_report_dir, qc_dir, "*", rna_qc_report), output_report_dir, samples=all_samples)
 		fastqc_files = find_files(os.path.join(project_dir, "*", "*", fastqc_default_html), output_report_dir, samples=all_samples)
 	

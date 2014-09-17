@@ -126,7 +126,6 @@ samtools sort -m 2500000000 $UNSORTED_BAM $SORTED_BAM #e.g the output is named a
 samtools index $SORTED_BAM.bam #note the extra .bam, which samtools sort already added by default. the SORTED_BAM variable does not have the .bam on the end
 samtools flagstat $SORTED_BAM.bam >$OUTDIR/flagstat.raw.sorted.BAM.out
 
-
 # Create a de-duped BAM file 
 if [ $DEDUP -eq $NUM1 ]; then
 	DEDUP_BAM=$SORTED_BAM.dedup # e.g. aln/X.sort.dedup (no .bam for ease in appending more file identifiers)
@@ -136,8 +135,6 @@ if [ $DEDUP -eq $NUM1 ]; then
 else
 	CURRENT_BAM=$SORTED_BAM
 fi
-
-samtools index $CURRENT_BAM
 
 # make a new bam file with only primary alignments  (if BAM is paired end, you may still have singletons here..so no filtering for proper pairs)
 FILTERED_FILE=$CURRENT_BAM.primary.bam

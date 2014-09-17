@@ -120,8 +120,11 @@ while [ "$1" != "" ]; do
                         shift
                         TARGET_BAM=$1
                         ;;
-                -align_only )
-                        SKIP_ANALYSIS=1
+		-align_only )
+			SKIP_ANALYSIS=1
+			;;
+                -no_rna_qc )
+                        SKIP_RNA_QC=1
                         ;;
 		-h | --help )
 			usage
@@ -183,6 +186,11 @@ fi
 #if SKIP_ANALYSIS was not set, then we DO want to perform analysis, so set the flag to zero
 if [ "$SKIP_ANALYSIS" == "" ]; then
     SKIP_ANALYSIS=0
+fi
+
+#if SKIP_RNA_QC was not set, 
+if [ "$SKIP_RNA_QC" == "" ]; then
+    SKIP_RNA_QC=0
 fi
 
 #if the aligner was not explicitly set, default to STAR
@@ -264,6 +272,13 @@ elif [[ "$ASSEMBLY" == mm10 ]]; then
     SNAPR_TRANSCRIPTOME_INDEX=/cccbstore-rc/projects/db/genomes/Mm/build38/snapr_transcriptome_index
     STAR_GENOME_INDEX=/cccbstore-rc/projects/db/genomes/Mm/build38/STAR_INDEX
     GTF_FOR_RNASEQC=/cccbstore-rc/projects/db/genomes/Mm/build38/Mus_musculus.GRCm38.75.transcript_id.chr_trimmed.gtf
+elif [[ "$ASSEMBLY" == tb_h37rv_2 ]]; then
+    GTF=/cccbstore-rc/projects/db/genomes/M_tuberculosis/h37rv_2/mycobacterium_tuberculosis_h37rv_2_transcripts.gtf
+    GENOMEFASTA=/cccbstore-rc/projects/db/genomes/M_tuberculosis/h37rv_2/mycobacterium_tuberculosis_h37rv_2_supercontigs.fasta
+    SNAPR_GENOME_INDEX=
+    SNAPR_TRANSCRIPTOME_INDEX=
+    STAR_GENOME_INDEX=/cccbstore-rc/projects/db/genomes/M_tuberculosis/h37rv_2/STAR_INDEX
+    GTF_FOR_RNASEQC=
 else
     echo "Unknown or un-indexed genome."
     exit 1
@@ -587,25 +602,28 @@ echo "
 ###########################################################################################################
 "
 
-#create the reports with RNA-seQC:
-while read line; do
- 	SAMPLE=$(echo $line | awk '{print $1}')
-	SAMPLE_BAM=$PROJECT_DIR'/'$SAMPLE_DIR_PREFIX$SAMPLE'/'$ALN_DIR_NAME'/'$SAMPLE$FINAL_BAM_SUFFIX
-
-        #create output directory
-        SAMPLE_QC_DIR=$REPORT_DIR'/'$RNA_SEQC_DIR'/'$SAMPLE
-        mkdir -p $SAMPLE_QC_DIR
+if [ $SKIP_RNA_QC -eq $NUM0 ]; then
  
-    	if [ $TEST -eq $NUM0 ]; then
-		java -jar $RNA_SEQC_JAR \
-		-o $SAMPLE_QC_DIR \
-		-r $GENOMEFASTA \
-		-s "$SAMPLE|$SAMPLE_BAM|-" \
-		-t $GTF_FOR_RNASEQC || { ( set -o posix ; set ) >>$PROJECT_DIR/$VARIABLES; echo "Something failed on performing QC step.  Check the output for guidance."; }
-	else
-		echo "Perform mock QC analysis, etc. on "$SAMPLE
-	fi
-done < $VALID_SAMPLE_FILE
+	#create the reports with RNA-seQC:
+	while read line; do
+ 		SAMPLE=$(echo $line | awk '{print $1}')
+		SAMPLE_BAM=$PROJECT_DIR'/'$SAMPLE_DIR_PREFIX$SAMPLE'/'$ALN_DIR_NAME'/'$SAMPLE$FINAL_BAM_SUFFIX
+
+	        #create output directory
+	        SAMPLE_QC_DIR=$REPORT_DIR'/'$RNA_SEQC_DIR'/'$SAMPLE
+	        mkdir -p $SAMPLE_QC_DIR
+ 
+	    	if [ $TEST -eq $NUM0 ]; then
+			java -jar $RNA_SEQC_JAR \
+			-o $SAMPLE_QC_DIR \
+			-r $GENOMEFASTA \
+			-s "$SAMPLE|$SAMPLE_BAM|-" \
+			-t $GTF_FOR_RNASEQC || { ( set -o posix ; set ) >>$PROJECT_DIR/$VARIABLES; echo "Something failed on performing QC step.  Check the output for guidance."; }
+		else
+			echo "Perform mock QC analysis, etc. on "$SAMPLE
+		fi
+	done < $VALID_SAMPLE_FILE
+fi
 
 echo "
 ###########################################################################################################
@@ -762,7 +780,7 @@ find $PROJECT_DIR -type d -not -path "$PROJECT_DIR" | sed -e "s:$PROJECT_DIR:$TA
 #find $PROJECT_DIR -type f | grep -Pv ".*$FASTQ_SUFFIX" | sed -e "s:.*:'&':;p;s:$PROJECT_DIR:$TARGET_DIR:g" | xargs -t -n2 mv
 
 # move all the files (including FASTQ) into the target directory:
-find $PROJECT_DIR -type f | sed -e "s:.*:'&':;p;s:$PROJECT_DIR:$TARGET_DIR:g" | xargs -t -n2 mv
+#find $PROJECT_DIR -type f | sed -e "s:.*:'&':;p;s:$PROJECT_DIR:$TARGET_DIR:g" | xargs -t -n2 mv
 
 echo "
 ###########################################################################################################
