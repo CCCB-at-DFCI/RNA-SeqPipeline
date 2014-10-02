@@ -14,7 +14,7 @@ function usage
         echo "**************************************************************************************************"
         echo "usage:
                 -d | --dir <path to sample directory>
-                -g | --genome <hg19 | mm10>
+                -g | --genome <hg19 | mm10 | tb_h37rv_2 | a_fumigatus_af293 >
                 -o | --output <path to output directory- this directory does NOT exist.  The pipeline will create it.>
                 -s | --samples <path to samples_file> (optional- if missing, it will infer the samples based on the project directory structure.)
                 -c | --contrasts <contrast_file> (optional)
@@ -279,6 +279,13 @@ elif [[ "$ASSEMBLY" == tb_h37rv_2 ]]; then
     SNAPR_TRANSCRIPTOME_INDEX=
     STAR_GENOME_INDEX=/cccbstore-rc/projects/db/genomes/M_tuberculosis/h37rv_2/STAR_INDEX
     GTF_FOR_RNASEQC=
+elif [[ "$ASSEMBLY" == a_fumigatus_af293 ]]; then
+    GTF=/cccbstore-rc/projects/db/genomes/a_fumigatus/af293/final.edit.gtf
+    GENOMEFASTA=/cccbstore-rc/projects/db/genomes/a_fumigatus/af293/A_fumigatus_Af293_current_chromosomes.fasta
+    SNAPR_GENOME_INDEX=
+    SNAPR_TRANSCRIPTOME_INDEX=
+    STAR_GENOME_INDEX=/cccbstore-rc/projects/db/genomes/a_fumigatus/af293/STAR_INDEX
+    GTF_FOR_RNASEQC=/cccbstore-rc/projects/db/genomes/a_fumigatus/af293/final.edit.rna_seqc.gtf
 else
     echo "Unknown or un-indexed genome."
     exit 1
@@ -491,7 +498,11 @@ else  # if did not ask for alignment, find the BAM files that are implied to exi
 		SAMPLE_ALN_DIR=$PROJECT_DIR'/'$SAMPLE_DIR_PREFIX$SAMPLE'/'$ALN_DIR_NAME
 		mkdir -p $SAMPLE_ALN_DIR
 		ln -s $LATEST_BAM_FILE $SAMPLE_ALN_DIR'/'$FINAL_BAM_FILE
-		ln -s $LATEST_BAM_FILE$BAM_IDX_EXTENSION $SAMPLE_ALN_DIR'/'$FINAL_BAM_FILE$BAM_IDX_EXTENSION
+		if [ ! -e "$LATEST_BAM_FILE$BAM_IDX_EXTENSION" ]; then
+			samtools index $SAMPLE_ALN_DIR'/'$FINAL_BAM_FILE				
+		else
+			ln -s $LATEST_BAM_FILE$BAM_IDX_EXTENSION $SAMPLE_ALN_DIR'/'$FINAL_BAM_FILE$BAM_IDX_EXTENSION
+		fi
 		printf "%s\t%s\n" $(echo $SAMPLE) $(echo $line | awk '{print $2}') >> $VALID_SAMPLE_FILE
 	else
 		echo "Could not locate a properly named BAM file for sample "$SAMPLE

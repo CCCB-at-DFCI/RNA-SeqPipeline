@@ -87,7 +87,7 @@ cdsFullBlind<-estimateDispersions(cds, method="blind")
 vsdFull<-varianceStabilizingTransformation(cdsFullBlind)
 
 nc<-counts( cds, normalized=TRUE )
-select<-order(rowMeans(nc), decreasing=TRUE)[1:NUM_GENES]
+select<-order(res$padj)[1:NUM_GENES]
 heatmapcols<-colorRampPalette(brewer.pal(9, "GnBu"))(100)
 
 #set the longest dimension of the image:
@@ -114,6 +114,6 @@ text_size = 1.5+1/log10(NUM_GENES)
 file_id<-paste(CONDITION_B, CONTRAST_FLAG, CONDITION_A, sep='')
 HEATMAP_FILE<-paste(file_id, HEATMAP_FILE, sep=".")
 png(filename=paste(OUTPUT_DIR,HEATMAP_FILE, sep="/"), width=w, height=h, units="px")
-heatmap.2(exprs(vsdFull)[select,], col=heatmapcols, trace="none", margin=c(15,12), cexRow=text_size, cexCol=text_size)
+heatmap.2(exprs(vsdFull)[select,], col=heatmapcols, trace="none", margin=c(25,12), cexRow=text_size, cexCol=text_size)
 dev.off()
 
