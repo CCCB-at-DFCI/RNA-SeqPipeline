@@ -24,7 +24,7 @@ function usage
                 -target <string> (optional- if the BAM files already exist and you want to select those with a particular suffix.  Default behavior is to find the newest BAM for each s$
                 -no_dedup (optional, default will dedup the BAM files.  Final result is a sorted, primary BAM file)
                 -a | --aligner <STAR | SNAPR> (optional, default is STAR)
-                -align_only (optional, if generating only BAM, count files, and QC.  Skips differential expression analysis.)
+                -skip_analysis (optional, if generating only BAM, count files, and QC.  Skips differential expression analysis.)
                 -test (optional, for simple test)"
         echo "**************************************************************************************************"
 }
@@ -120,7 +120,7 @@ while [ "$1" != "" ]; do
                         shift
                         TARGET_BAM=$1
                         ;;
-		-align_only )
+		-skip_analysis )
 			SKIP_ANALYSIS=1
 			;;
                 -no_rna_qc )
@@ -265,6 +265,13 @@ if [[ "$ASSEMBLY" == hg19 ]]; then
     SNAPR_TRANSCRIPTOME_INDEX=/cccbstore-rc/projects/db/genomes/Human/GRCh37.75/SNAPR/transcriptome-dir
     STAR_GENOME_INDEX=/cccbstore-rc/projects/db/genomes/Human/GRCh37.75/STAR_INDEX  
     GTF_FOR_RNASEQC=/cccbstore-rc/projects/db/genomes/Human/GRCh37.75/GTF/Homo_sapiens.GRCh37.75.transcript_id.chr_trimmed.gtf
+elif [[ "$ASSEMBLY" == mm9 ]]; then
+    GTF=/cccbstore-rc/projects/db/genomes/Mm/build37/Mus_musculus.NCBIM37.62.edit.gtf
+    GENOMEFASTA=/cccbstore-rc/projects/db/genomes/Mm/build37/mm9.fa
+    SNAPR_GENOME_INDEX=
+    SNAPR_TRANSCRIPTOME_INDEX=
+    STAR_GENOME_INDEX=/cccbstore-rc/projects/db/genomes/Mm/build37/STAR_INDEX
+    GTF_FOR_RNASEQC=/cccbstore-rc/projects/db/genomes/Mm/build37/Mus_musculus.NCBIM37.62.edit.gtf #filtering to require transcript_id attribute yielded same number of rows.
 elif [[ "$ASSEMBLY" == mm10 ]]; then
     GTF=/cccbstore-rc/projects/db/genomes/Mm/build38/Mus_musculus.GRCm38.75.chr_trimmed.gtf
     GENOMEFASTA=/cccbstore-rc/projects/db/genomes/Mm/build38/mm10.fa
@@ -388,19 +395,20 @@ fi
 
 echo -e "\nChecking dependencies:\n"
 
-#check for R dependencies before continuing:
-Rscript $R_DEPENDENCY_CHECK_SCRIPT || { echo "The proper R dependencies were not installed or could not be installed.  Check $R_DEPENDENCY_CHECK_SCRIPT to see which packages should be installed in your R instance.  Exiting."; exit 1; }
-# initialize some variables:
-
-#check for java
-if ! which java ; then
-	echo "Could not find java in current directory or in PATH"
-	exit 1
-fi
-
 #check for Rscript
 if ! which Rscript ; then
 	echo "Could not locate the Rscript engine in current directory or PATH"
+	exit 1
+fi
+
+# check for R dependencies before continuing:
+# If we are skipping the analysis then we do NOT need these, so only a conditional check.
+if [ $SKIP_ANALYSIS -eq $NUM0 ]; then
+	Rscript $R_DEPENDENCY_CHECK_SCRIPT || { echo "The proper R dependencies were not installed or could not be installed.  Check $R_DEPENDENCY_CHECK_SCRIPT to see which packages should be installed in your R instance.  Exiting."; exit 1; }
+fi
+#check for java
+if ! which java ; then
+	echo "Could not find java in current directory or in PATH"
 	exit 1
 fi
 
@@ -677,7 +685,7 @@ if [ $SKIP_ANALYSIS -eq $NUM0 ]; then
 		echo -e "\nSkipping differential analysis since no contrast file was specified.\n"
 	fi
 else
-	echo -e "\nSkipping differential analysis since -align_only flag was set.\n"
+	echo -e "\nSkipping differential analysis since -skip_analysis flag was set.\n"
 fi
 
 echo "
@@ -737,7 +745,7 @@ if [ $SKIP_ANALYSIS -eq $NUM0 ]; then
 	    	echo -e "\nSkipping GSEA analysis since no contrast file was specified.\n"
 	fi
 else
-	echo -e "\nSkipping GSEA analysis since -align_only flag was set.\n"
+	echo -e "\nSkipping GSEA analysis since -skip_analysis flag was set.\n"
 fi
 
 echo "

@@ -24,7 +24,7 @@ java -cp $1 -Xmx1024m $2 \
 -res $3 \
 -cls $4#$5 \
 -gmx $6 \
--collapse true \
+-collapse false \
 -mode Max_probe \
 -norm meandiv \
 -nperm $7 \
